@@ -2,13 +2,14 @@
 
 Plan · 16 November 2026 · For the session that builds the Mac half, on the Mac
 
-This plan is written for someone who has not seen the earlier work. Nothing here is implemented yet.
+This plan is written for someone who has not seen the earlier work. The Mac helper is not implemented yet. The Windows half now has supervised device and combined-handoff evidence; read the [Windows handoff](../mac/WINDOWS-HANDOFF.md) for the current findings and limitations.
 
 ## 1. Read first
 
 1. `AGENTS.md`: the project rules. They apply on the Mac too.
 2. `docs/DESIGN-v1.2.md`: the approved design for this feature. All of it.
 3. `docs/DESIGN-v1.1.md`: the original design. Skim §3 (constraints) and §7 (one write, no retry, no rollback) for the principles the Mac helper must share.
+4. `mac/WINDOWS-HANDOFF.md`: successful Windows tests, the first failed keyboard attempt, protocol/observation regressions to port, and what remains unproven on macOS.
 
 ## 2. What you are building
 
@@ -35,13 +36,14 @@ Known:
 | Logitech Flow | Off on both computers, and must stay off | Owner, 13 November 2026 |
 | Devices | LIFT is Logitech 046D:B031, ERGO K860 is 046D:B359, both Bluetooth LE direct, no receiver | Measured on the PC |
 | HID++ | Both devices answer the requests in §6 and report "change host" (0x1814) and "hosts info" (0x1815) | Measured on the PC with read-only requests |
+| Windows channel changes | Both individual device gates and one combined monitor/keyboard/mouse handoff passed with owner-confirmed arrival; the first keyboard attempt failed | Supervised tests on 16 November 2026; see the Windows handoff and acceptance ledger |
 
 Not known. Each of these is a step in §8, and each may change the plan:
 
 - Whether a one-shot process on macOS can open these devices' HID++ collection, and what permission it needs. Third-party tools disagree: one needs only Input Monitoring, another needed root.
 - How Options+ for Mac launches a tool from a button, and whether it launches exactly once per press.
 - Whether the Mac can read the monitor's current input back.
-- Whether the actual channel-change command works. It has never been sent, from either computer.
+- Whether the actual channel-change command works from the Mac. Windows-to-Mac sends have now passed; Mac-to-PC is still untested.
 
 The channel numbers and host names are machine configuration. They are deliberately not in Git. You discover them on the Mac in step 2.
 
@@ -104,7 +106,7 @@ Exit codes, mirroring the PC where the meaning matches:
 
 ## 6. HID++ protocol reference
 
-Every request below except the channel change was exercised against both devices from Windows on 16 November 2026.
+Every request below, including the channel change, has now been exercised against both devices from Windows on 16 November 2026. This does not validate IOKit transport or Mac-to-PC switching. The Windows handoff records the first failed attempt and the later successful tests.
 
 Transport:
 
@@ -129,6 +131,8 @@ Transport:
 On Windows the write is 20 bytes including the report ID. On macOS, check how IOKit expects the report ID to be passed and prove it with a read-only request before anything else.
 
 Bound every read with a timeout (500 ms; queries may be retried once). The channel change is never retried.
+
+Also carry over the Windows safeguards: reject equal resolved change-host/hosts-info indexes, validate host/offset echoes, retain change-host rejection frames even while awaiting a different query, and keep silence distinct from explicit disconnection. The successful Windows build starts departure observation with a 250 ms passive receive interval inside the two-second budget. Its effect on the earlier failure is unproven; validate it on the Mac rather than assuming timing alone fixes switching.
 
 ## 7. The button action
 

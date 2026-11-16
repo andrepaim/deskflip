@@ -78,3 +78,98 @@ Calibration: on this cable/GPU configuration, **input 5 = PC** and **input 6 = l
 | Installation and rollback | Installed 12 Nov 2026 to `%LOCALAPPDATA%\MonitorSwitch\bin`: 194/194 files match the tested manifest, app exe `390f8624…edd9`; installed `status` exit 0, read 5. Rebind to installed path and rollback demonstration pending | Package path/hash, restored assignment, unchanged Deskflow |
 
 Use operation IDs and binary hashes to connect future evidence. Do not commit full device paths, EDID/serial dumps, unrelated window data or private screenshots. Native acceptance and a user's visual confirmation are separate evidence.
+
+## Windows v1.2 implementation — 16 November 2026
+
+Scope: Windows source, deterministic tests and documentation on `feature/keyboard-mouse-follow`. No native device commands were executed in this implementation session. The installed v1.1 package, machine config, button assignment and Mac files were not changed.
+
+| Check | Measured result |
+| --- | --- |
+| Restore from repository root | `dotnet restore MonitorSwitch.slnx` succeeded; all projects up to date |
+| Release build from root | `dotnet build MonitorSwitch.slnx -c Release --no-restore`: 0 warnings, 0 errors |
+| Hardware-free tests from root | `dotnet test MonitorSwitch.slnx -c Release --no-build`: 226 passed, 0 failed, 0 skipped |
+| Covered behavior | Fixed HID++ packets, feature resolution and ambiguous-index refusal, unrelated/error replies, timeout/retry budgets, host-name pagination, strict optional config, enrollment backup/removal, exact targeting with fakes, all-device preflight, keyboard/mouse ordering, one attempted change per device, uncertainty reporting, dry-run/no-follow, durable monitor completion before follow, unchanged recovery state |
+| Native Windows HID backend | Implemented and compiled; fresh shared handles, fixed collection/report lengths and product/path-hash matching. Not exercised against hardware in this session |
+| Read-only validation alongside Options+ | Inventory, enrollment and dry-run passed in the subsequent supervised sessions below |
+| P1: K860 PC→Mac | Passed on the second supervised attempt: Left / Followed, exit 0, 734 ms; owner confirmed typing reached the Mac ("Yes, now it worked!!"). Owner also confirmed physical Easy-Switch works both ways during diagnosis. First failed attempt remains recorded below |
+| P2: LIFT PC→Mac | Passed: supervised single attempt returned Left / Followed, exit 0, 344 ms; owner confirmed "worked as well" in response to the pointer/physical-return check |
+| Combined Windows monitor + followers | Passed once: Confirmed, input 5→6, both followers Left, exit 0, 3095 ms; owner confirmed Mac image, typing and pointer: "All worked" |
+| Native timing/cancellation | Pending: 500 ms query cancellation behavior, two-second departure observations, driver errors on Bluetooth disconnection, process/handle cleanup |
+| Installation / round trips / asleep host | Pending: approved Windows update, Mac M2/M3 gates, R1 ten full button round trips and S1 asleep-host recovery |
+
+`Left` is local disconnection evidence, not proof of arrival. Timeouts and uncertain native errors produce `Unknown`; an accepted write alone is not successful physical acceptance. The 13/16 November read-only probe findings remain prior design evidence and are not validation of this new native backend.
+
+## Windows v1.2 supervised read-only inventory — 16 November 2026
+
+The owner requested validation step 1. Ran `followers --output PATH` from the Release build at 14:15:40 UTC. The process exited normally with code 0 (`FollowersDiscovered`). Its report was saved outside the repository in the user's temporary directory.
+
+| Check | Measured result |
+| --- | --- |
+| Device inventory | One K860 (B359) and one LIFT (B031), with distinct path hashes; neither reported a problem |
+| Tested Core DLL SHA-256 | `baf4247c9ca25fb507e52d87c47a39bce1c64fe344e9318c3c947216731cb648` |
+| Tested Windows DLL SHA-256 | `103d01fd34bc5e8bb63cca08b3b8cc250d42088f4b38e1a9659a18d11c932b9a` |
+| Fixed HID++ queries | Both returned current channel, three host slots, paired state and readable host names for every slot |
+| Pairing interpretation | Both current slots name the PC; the same previously identified Mac host appears on a different target channel for each device. Exact channels, host names and identity hashes remain local |
+| Existing enrollment | Neither device is enrolled as a follower yet |
+| Options+ coexistence | Options+ agent, app broker and updater processes were running when checked immediately after inventory |
+| Side effects | No monitor switch, channel-change command, enrollment, installation or button-assignment change performed |
+
+This validates the new backend's discovery, shared-handle access and read-only replies on these devices. It does not validate change-host sends, departure detection, arrival on the Mac, timeout cancellation or full button operation. Remaining: preserve original config/package, enroll the owner-selected target slots, dry-run, supervised P1/P2, and installation/full acceptance with the Mac half.
+
+## Windows v1.2 backup and follower enrollment — 16 November 2026
+
+The owner authorized backing up the original installation/config and enrolling the two identified Mac target slots. Before backup, no helper was running, no follower section existed, and monitor state had no pending operation. Took the shared operation lock while copying the original config and full installed package to a separate per-user backup directory outside the repository. Verified all 194 package files and the config against their source SHA-256 hashes; the manifest and backup location remain local.
+
+The new Release build returned `FollowerEnrolled`, exit 0, for the keyboard at 14:17:59 UTC and the mouse at 14:18:06 UTC. No replacement override was needed. Verified both saved product IDs, device path hashes, target channels and host names against the earlier inventory. Exact machine configuration remains outside Git.
+
+Post-enrollment verification: original monitor settings unchanged, `state.json` hash unchanged, and all installed package file hashes unchanged. Enrollment only queried the devices; no channel-change command or monitor switch was issued. No button assignment or Mac file was changed.
+
+The installed v1.1 binary remains in place and will reject the new optional `follow` section. Its button action must not be used as a v1.2 test. Next: dry-run with the new executable, then supervised single-device P1/P2, followed by the approved update and full acceptance. The separate original backup remains available; the normal `config.previous.json` now contains the intermediate keyboard-only enrollment.
+
+## Windows v1.2 supervised dry-run — 16 November 2026
+
+At the owner's request, ran `toggle --dry-run` with the new Release executable at 14:19:26 UTC. It exited 0 with outcome `DryRun`, read monitor input 5, and planned input 6. Both keyboard and mouse passed preflight (`Ready`) and were reported as `WouldSend`, with `commandSent: false` and `sendResult: NotSent`. The monitor write field was null. Internal elapsed time was 1094 ms.
+
+Config and monitor-state SHA-256 hashes were identical before and after the command. A copy of the derived result remains in the local temporary directory, outside Git. No actual switch or channel change occurred. Next acceptance gates are supervised keyboard-only P1 and mouse-only P2, including owner-confirmed arrival and Easy-Switch recovery.
+
+## Windows v1.2 supervised keyboard-only attempt — 16 November 2026
+
+The owner authorized the keyboard-only physical test after being told the destination and physical Easy-Switch recovery. Ran `follow --device keyboard` once with the new Release executable. At 14:20:07 UTC the helper reported `FollowIncomplete`, exit 17, with keyboard preflight `Ready`, `commandSent: true`, `sendResult: Accepted`, and departure observation `Unknown`. Internal elapsed time was 3078 ms. No retry or automatic rollback was performed.
+
+The command did not access the monitor or send a mouse channel change. Config and monitor-state SHA-256 hashes remained unchanged. The complete result is retained locally outside Git. API acceptance does not establish arrival: owner-confirmed typing on the Mac and physical recovery are still pending. P1 remains open, and the uncertain departure observation needs investigation before full acceptance.
+
+## Keyboard failure diagnosis — 16 November 2026
+
+The owner's result was: "No, still here on PC." A subsequent read-only inventory found both enrolled devices still reporting the PC channel, with no device problems. The owner then confirmed "Physical switch works both ways" when asked to test the keyboard's physical Easy-Switch controls to the Mac and back. This establishes physical pairing/recovery, but the software channel-change gate did not pass. No second software channel change or mouse test was run.
+
+Code inspection found an observability defect: a rejection of the change-host command was ignored by the subsequent state-query reply matcher, and native I/O error codes were discarded. This could conceal the reason for a failed switch; it does not establish what happened during the first attempt, whose replies cannot be recovered. The command's function and zero-based channel encoding agree with the [Solaar change-host implementation](https://github.com/pwr-Solaar/Solaar/blob/master/lib/logitech_receiver/settings_templates.py).
+
+The development build now captures matching change-host error replies during a 250 ms passive observation window and subsequent state queries, preserves numeric native/query errors, records feature indexes/version and state/timeout counters, and reports `Rejected` separately from transport `Accepted`. The total observation scheduling budget remains two seconds per device; there is still one change-host attempt and no retry or rollback. Diagnostics contain no raw reports, device paths or host names and never enter authoritative state.
+
+Root restore/build/test passed after the change: 0 warnings, 0 errors; **232 tests passed, 0 failed, 0 skipped**. New tests exercise immediate/late command rejections, unrelated replies, the passive interval/deadline, retained numeric native errors, and rejection overriding transport acceptance. A read-only inventory with this build passed for both devices: the change-host feature version was 1 on both; indexes matched the earlier design evidence. Each session recorded one query timeout recovered by the permitted query retry, with no native I/O or device query errors. Exact current channels and local reports remain outside Git.
+
+Root cause of the failed software switch remains unproven. Next is a separately supervised single keyboard test with these diagnostics. P2 and full switching remain on hold; the installed package and enrolled config were not changed during diagnosis.
+
+## Keyboard-only test with improved diagnostics — 16 November 2026
+
+The owner explicitly authorized a new supervised keyboard-only attempt. At 14:35:32 UTC, `follow --device keyboard` returned `Followed`, exit 0, in 734 ms internally. Preflight was `Ready`; exactly one change-host command was attempted and accepted by the transport. This time the helper observed native disconnection (`Left`). No change-host rejection or query error was reported. There was one query timeout recovered during preflight by the permitted read-query retry; no switch command was retried.
+
+Config and monitor-state SHA-256 hashes were unchanged. The command did not switch the monitor or send a mouse channel change. Full local evidence remains outside Git. The keyboard's arrival on the Mac and return via its physical Easy-Switch control still require the owner's confirmation for this attempt; `Left` alone does not complete P1. The added passive receive interval may be relevant to the different result, but this run does not establish the first failure's cause.
+
+Owner follow-up to the typing check: "Yes, now it worked!!" This confirms arrival on the Mac for the second attempt. Together with the earlier explicit confirmation that physical Easy-Switch works both ways, P1 passes. It does not establish repeated reliability or the cause of the first failure. P2 (mouse), full button round trips and lifecycle checks remain open.
+
+## Windows v1.2 supervised mouse-only attempt — 16 November 2026
+
+The owner authorized one mouse-only physical test after being told the destination and underside Easy-Switch recovery. At 14:38:27 UTC, `follow --device mouse` returned `Followed`, exit 0, in 344 ms internally. Preflight was `Ready`, the single attempted change-host command was accepted by the transport, and native disconnection was observed (`Left`). Diagnostics recorded zero timeouts, zero native I/O failures, and no query or change-host rejection.
+
+Config and monitor-state SHA-256 hashes remained unchanged. The command did not switch the monitor or send a keyboard channel change. No retry or automatic rollback was performed. Full evidence remains local outside Git. Owner-confirmed pointer movement on the Mac and physical return remain pending; API acceptance and `Left` alone do not complete P2.
+
+Owner follow-up to the pointer/physical-return check: "worked as well". P2 passes. Both individual Windows follower gates now have owner-confirmed successful attempts. Combined monitor-plus-follow operation, installation, Mac helper gates, ten full button round trips and lifecycle/sleep behavior remain unvalidated; the first failed keyboard attempt remains part of the evidence.
+
+## Windows v1.2 supervised combined toggle — 16 November 2026
+
+The owner explicitly authorized one combined monitor/keyboard/mouse test after the two individual follower gates passed. At 14:39:44 UTC the new Release executable's `toggle` returned `Confirmed`, exit 0, in 3095 ms internally. It read input 5, attempted one accepted monitor write to input 6, and read back input 6. Both followers passed preflight, received one accepted change-host attempt each in keyboard-then-mouse order, and were observed as `Left`. No native I/O error or HID++ rejection was reported. Diagnostic timeout counts were two for the keyboard and one for the mouse; these include query/passive-read timeouts and are not retries of channel-change commands.
+
+Verified that config was unchanged, authoritative state durably recorded the monitor confirmation with no pending operation, and follower results were absent from authoritative state. Full derived evidence remains local outside Git. No retry or automatic rollback was performed. Owner confirmation of the Mac image, typing and pointer movement is pending; API/readback/departure observations alone do not establish the combined physical outcome. This is one Windows-to-Mac operation, not a full button round trip or installation acceptance.
+
+Owner follow-up to the combined image/typing/pointer check: "All worked". The single supervised Windows-to-Mac combined handoff passes. Remaining acceptance: approved Windows installation and button launch, Mac return-helper gates, ten full button round trips, and lifecycle/asleep-host cases. The earlier failed keyboard attempt remains recorded; one successful combined handoff is not a repeated-reliability claim.

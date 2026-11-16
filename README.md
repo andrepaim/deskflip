@@ -6,6 +6,8 @@ An on-demand Windows helper that switches André's Samsung LU28R55 between the P
 
 The implementation follows [the v1.1 design](docs/DESIGN-v1.1.md).
 
+This branch also implements the Windows half of [v1.2 keyboard/mouse following](docs/DESIGN-v1.2.md). The current build passes 232 hardware-free tests, both individual follower gates, and one owner-confirmed combined monitor/keyboard/mouse handoff. It has not been installed. The installed v1.1 executable rejects the local config while followers are enrolled, so its existing button action is not currently usable. See the [Windows follower setup](docs/SETUP.md#windows-v12-keyboard-and-mouse-followers), [acceptance ledger](docs/ACCEPTANCE.md), and [Windows findings for Mac development](mac/WINDOWS-HANDOFF.md).
+
 ## Using it
 
 Press the small round button next to the LIFT scroll wheel. Each press toggles the monitor's input (VCP 0x60) between the two tested values:
@@ -18,7 +20,7 @@ Press the small round button next to the LIFT scroll wheel. Each press toggles t
 A switch takes about 1.1 s and is confirmed by reading the input back. The button keeps working while the monitor shows the MacBook, and always toggles from the input actually showing, including after a change made with the monitor's own buttons.
 
 - A press while a switch is still running is ignored silently (Busy). A press within 1.5 s of the last switch is ignored with a short beep (Debounced). Nothing is queued.
-- Any other failure beeps once and leaves the monitor alone. `%LOCALAPPDATA%\MonitorSwitch\last-result.json` says what happened.
+- Any other failure beeps once. `%LOCALAPPDATA%\MonitorSwitch\last-result.json` says what happened; an uncertain monitor write is reconciled on the next launch.
 - The monitor's own input button always works as a fallback.
 
 ## How it works
@@ -33,6 +35,10 @@ A switch takes about 1.1 s and is confirmed by reading the input back. The butto
 
 Other commands: `discover --json --output PATH`, `status --output PATH`, `diagnose --output PATH`, `enroll --device-path PATH --edid-hash HASH [--replace]`, `set --input 5|6`, `toggle --dry-run`, `probe-trigger`.
 
+With v1.2 followers enrolled, a confirmed toggle toward the away input also moves the keyboard, then the mouse. All followers must pass preflight before any channel change. `set --input` and `toggle --no-follow` move only the monitor. A homeward toggle keeps the devices on the PC. `toggle --dry-run` includes a read-only follower plan when following would apply.
+
+New commands: `followers --output PATH`, `enroll-follower --name NAME --product-id PID --channel N [--replace]`, `enroll-follower --name NAME --remove`, and supervised `follow [--device NAME]`. The optional `follow` section keeps config schema 1. Without it, the helper retains v1.1 behavior.
+
 | Exit | Meaning |
 | --- | --- |
 | 0 | Confirmed, already selected, or a successful read-only/enrollment/probe command |
@@ -44,9 +50,12 @@ Other commands: `discover --json --output PATH`, `status --output PATH`, `diagno
 | 14 | Write made no change |
 | 15 | Outcome unverified; the pending operation is kept |
 | 16 | Interrupted operation resolved; no switch made |
+| 17 | Follow incomplete or follower dry-run preflight refused; the monitor may already have switched |
 | 20 | Internal or persistence error |
 
 Full semantics are in design §7.
+
+Follower observations appear only in derived reports, never in `state.json`. `Left` means a native disconnect was observed here; it does not prove arrival on the other computer. Silence or uncertain I/O is `Unknown`. Sends are never retried or rolled back. Recover with the K860 Easy-Switch keys, the LIFT underside button, and the monitor's input button.
 
 `MonitorSwitch.TriggerProbe.exe` (no arguments) only appends a JSON line to `%LOCALAPPDATA%\MonitorSwitch\logs\trigger-probe-YYYY-MM-DD.jsonl`. It proves a button fires once per press before the real switch is bound.
 

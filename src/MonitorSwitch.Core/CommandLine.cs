@@ -1,10 +1,11 @@
 namespace MonitorSwitch.Core;
 
-public enum CommandKind { Toggle, Discover, Status, Diagnose, ProbeTrigger, Set, Enroll }
+public enum CommandKind { Toggle, Discover, Status, Diagnose, ProbeTrigger, Set, Enroll, Followers, EnrollFollower, Follow }
 
 public sealed record Command(CommandKind Kind, uint? Input = null, bool DryRun = false,
     string? OutputPath = null, string? DevicePath = null, string? EdidHash = null,
-    bool ReplaceEnrollment = false);
+    bool ReplaceEnrollment = false, bool NoFollow = false, string? FollowerName = null,
+    string? ProductId = null, int? Channel = null, bool RemoveFollower = false);
 
 public static class CommandLine
 {
@@ -20,6 +21,9 @@ public static class CommandLine
             "probe-trigger" => CommandKind.ProbeTrigger,
             "set" => CommandKind.Set,
             "enroll" => CommandKind.Enroll,
+            "followers" => CommandKind.Followers,
+            "enroll-follower" => CommandKind.EnrollFollower,
+            "follow" => CommandKind.Follow,
             _ => throw new ArgumentException("Unknown command.")
         };
 
@@ -29,8 +33,8 @@ public static class CommandLine
             var key = args[i];
             if (!key.StartsWith("--", StringComparison.Ordinal) || options.ContainsKey(key))
                 throw new ArgumentException("Invalid or duplicate option.");
-            if (key is "--json" or "--dry-run" or "--replace") options.Add(key, null);
-            else if (key is "--output" or "--input" or "--device-path" or "--edid-hash")
+            if (key is "--json" or "--dry-run" or "--replace" or "--no-follow" or "--remove") options.Add(key, null);
+            else if (key is "--output" or "--input" or "--device-path" or "--edid-hash" or "--name" or "--product-id" or "--channel" or "--device")
             {
                 if (++i >= args.Length || string.IsNullOrWhiteSpace(args[i]) || args[i].StartsWith("--", StringComparison.Ordinal))
                     throw new ArgumentException("Missing option value.");
@@ -41,11 +45,14 @@ public static class CommandLine
 
         string[] permitted = kind switch
         {
-            CommandKind.Toggle => ["--dry-run"],
+            CommandKind.Toggle => ["--dry-run", "--no-follow"],
             CommandKind.Discover => ["--json", "--output"],
             CommandKind.Status or CommandKind.Diagnose => ["--output"],
             CommandKind.Set => ["--input"],
             CommandKind.Enroll => ["--device-path", "--edid-hash", "--replace"],
+            CommandKind.Followers => ["--output"],
+            CommandKind.EnrollFollower => ["--name", "--product-id", "--channel", "--replace", "--remove"],
+            CommandKind.Follow => ["--device"],
             _ => []
         };
         if (options.Keys.Any(key => !permitted.Contains(key)))
@@ -60,7 +67,7 @@ public static class CommandLine
         }
         if (kind == CommandKind.Discover && !options.ContainsKey("--json"))
             throw new ArgumentException("Discovery requires --json.");
-        if (kind is CommandKind.Discover or CommandKind.Status or CommandKind.Diagnose && !options.ContainsKey("--output"))
+        if (kind is CommandKind.Discover or CommandKind.Status or CommandKind.Diagnose or CommandKind.Followers && !options.ContainsKey("--output"))
             throw new ArgumentException("This command requires --output.");
         if (kind == CommandKind.Enroll && (!options.ContainsKey("--device-path") || !options.ContainsKey("--edid-hash")))
             throw new ArgumentException("Enrollment requires device path and EDID hash.");
@@ -68,7 +75,29 @@ public static class CommandLine
         if (kind == CommandKind.Enroll && !Edid.IsIdentityHash(options["--edid-hash"]!))
             throw new ArgumentException("EDID hash must be 64 lowercase hex characters.");
 
+        int? channel = null;
+        if (kind == CommandKind.EnrollFollower)
+        {
+            if (!options.ContainsKey("--name")) throw new ArgumentException("Follower name is required.");
+            if (options.ContainsKey("--remove"))
+            {
+                if (options.Count != 2) throw new ArgumentException("Removal accepts only --name and --remove.");
+            }
+            else
+            {
+                if (!FollowerValidation.IsProductId(options.GetValueOrDefault("--product-id")))
+                    throw new ArgumentException("Product ID must be four hex digits.");
+                channel = options.GetValueOrDefault("--channel") switch
+                {
+                    "1" => 1, "2" => 2, "3" => 3,
+                    _ => throw new ArgumentException("Channel must be 1, 2 or 3."),
+                };
+            }
+        }
+
         return new(kind, input, options.ContainsKey("--dry-run"), options.GetValueOrDefault("--output"),
-            options.GetValueOrDefault("--device-path"), options.GetValueOrDefault("--edid-hash"), options.ContainsKey("--replace"));
+            options.GetValueOrDefault("--device-path"), options.GetValueOrDefault("--edid-hash"), options.ContainsKey("--replace"),
+            options.ContainsKey("--no-follow"), options.GetValueOrDefault("--name") ?? options.GetValueOrDefault("--device"),
+            options.GetValueOrDefault("--product-id")?.ToUpperInvariant(), channel, options.ContainsKey("--remove"));
     }
 }

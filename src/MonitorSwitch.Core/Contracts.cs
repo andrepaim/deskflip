@@ -5,7 +5,12 @@ public sealed record InputRead(bool Success, uint? Value, int? Win32Error);
 public sealed record WriteReply(bool ApiAccepted, int? Win32Error);
 public sealed record SwitchResult(string OperationId, string Command, string Outcome,
     uint? Before, uint? Target, uint? Observed, int ExitCode,
-    WriteReply? Write = null, long ElapsedMs = 0, string? Detail = null);
+    WriteReply? Write = null, long ElapsedMs = 0, string? Detail = null)
+{
+    // Derived output only. Monitor completions are saved before followers run.
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<FollowerResult>? Followers { get; init; }
+}
 public sealed record PendingOperation(string OperationId, MonitorIdentity Identity,
     string Command, uint Before, uint Target, DateTimeOffset StartedAtUtc);
 public sealed record CooldownStamp(string BootIdentity, long MonotonicMilliseconds);
@@ -43,6 +48,7 @@ public static class ExitCodes
     public const int NotChanged = 14;
     public const int OutcomeUnverified = 15;
     public const int ReconciledWithoutToggle = 16;
+    public const int FollowIncomplete = 17;
     public const int InternalError = 20;
     public const int NotImplemented = 21;
 }
@@ -62,6 +68,7 @@ public static class Outcomes
     public const string OutcomeUnverified = nameof(OutcomeUnverified);
     public const string ReconciledWithoutToggle = nameof(ReconciledWithoutToggle);
     public const string InternalError = nameof(InternalError);
+    public const string FollowIncomplete = nameof(FollowIncomplete);
 }
 
 public static class NativeErrors

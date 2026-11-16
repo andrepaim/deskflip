@@ -1,6 +1,6 @@
 # Keyboard and mouse follow the monitor
 
-Design addendum · 16 November 2026 · Version 1.2 · **Approved by the owner on 16 November 2026; nothing implemented yet**
+Design addendum · 16 November 2026 · Version 1.2 · **Approved by the owner on 16 November 2026. Windows source implemented; individual follower gates and one combined handoff passed. Installation, Mac gates and full round-trip acceptance remain pending.**
 
 This document extends [design v1.1](DESIGN-v1.1.md). Everything in v1.1 still applies unless a section here says otherwise. Read v1.1 first.
 
@@ -44,9 +44,11 @@ Reported by the owner:
 | Mac DDC | `m1ddc set input 5` on the Mac switched the monitor to the PC ("It worked on mac") |
 | Logitech Flow | Off (13 November 2026). It must stay off; it moves the same devices and could fight the helper |
 
+Subsequent Windows implementation evidence: both individual channel-change gates and one combined monitor/keyboard/mouse handoff passed with owner-confirmed arrival. The first keyboard attempt failed and remains recorded in [acceptance](ACCEPTANCE.md). See the [Windows handoff for Mac development](../mac/WINDOWS-HANDOFF.md) for protocol safeguards, diagnostic changes and unresolved limits.
+
 Not yet measured, and therefore not assumed:
 
-- Sending the actual change-host command (function 1) to either device, from either computer.
+- Sending the actual change-host command (function 1) from the Mac to the PC.
 - Whether a one-shot process on the Mac can open the HID++ collection, and which permissions it needs.
 - Whether Options+ for Mac launches a helper exactly once per press.
 - Whether the Mac can read the monitor's current input back over DDC.

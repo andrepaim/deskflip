@@ -5,7 +5,7 @@ namespace MonitorSwitch.Core;
 /// → exactly one write → bounded readback → atomic completion → derived reports, all under the lock.
 /// </summary>
 public sealed class SwitchOrchestrator(IMonitorLocator locator, IOperationStore store, IOperationLock operationLock,
-    IClock clock, IResultReporter reporter, AppConfig config)
+    IClock clock, IResultReporter reporter, AppConfig config, FollowerCoordinator? followers = null)
 {
     private readonly IMonitorLocator locator = locator;
     private readonly IOperationStore store = store;
@@ -24,7 +24,27 @@ public sealed class SwitchOrchestrator(IMonitorLocator locator, IOperationStore 
         using var lease = operationLock.TryAcquire();
         if (lease is null) return Report(operation.Result(Outcomes.Busy, ExitCodes.BusyOrDebounced));
         // Reports are emitted before the lease is released so read-only commands cannot race them.
-        return Report(operation.Execute());
+        var result = operation.Execute();
+        if (command.Kind == CommandKind.Toggle && !command.NoFollow && !command.DryRun
+            && result.Outcome == Outcomes.Confirmed && result.ExitCode == ExitCodes.Success
+            && config.Follow is { } follow && result.Target == follow.AwayInput)
+            result = AddFollowers(result, follow, false);
+        return Report(result);
+    }
+
+    private SwitchResult AddFollowers(SwitchResult result, FollowConfig follow, bool dryRun)
+    {
+        var started = clock.MonotonicMilliseconds;
+        var observations = followers?.Run(follow, dryRun)
+            ?? follow.Devices.Select(d => new FollowerResult(d.Name, "Unavailable", false, "NotSent")).ToArray();
+        var success = FollowerCoordinator.Succeeded(observations, dryRun);
+        return result with
+        {
+            Followers = observations,
+            Outcome = success ? result.Outcome : Outcomes.FollowIncomplete,
+            ExitCode = success ? result.ExitCode : ExitCodes.FollowIncomplete,
+            ElapsedMs = result.ElapsedMs + clock.MonotonicMilliseconds - started,
+        };
     }
 
     private SwitchResult Report(SwitchResult result)
@@ -40,7 +60,7 @@ public sealed class SwitchOrchestrator(IMonitorLocator locator, IOperationStore 
         private readonly string id = Guid.NewGuid().ToString("N");
         private readonly long started = owner.clock.MonotonicMilliseconds;
         private readonly string name = command.Kind == CommandKind.Set ? $"set {command.Input}"
-            : command.DryRun ? "toggle --dry-run" : "toggle";
+            : "toggle" + (command.DryRun ? " --dry-run" : "") + (command.NoFollow ? " --no-follow" : "");
         private AppConfig Config => owner.config;
         private MonitorIdentity Identity => owner.config.Identity;
 
@@ -84,7 +104,11 @@ public sealed class SwitchOrchestrator(IMonitorLocator locator, IOperationStore 
                 if (target == before)
                     return Result(Outcomes.AlreadySelected, ExitCodes.Success, before, target, before);
                 if (command.DryRun)
-                    return Result(Outcomes.DryRun, ExitCodes.Success, before, target, detail: $"Would select {Config.LabelFor(target)}.");
+                {
+                    var plan = Result(Outcomes.DryRun, ExitCodes.Success, before, target, detail: $"Would select {Config.LabelFor(target)}.");
+                    return !command.NoFollow && Config.Follow is { } follow && target == follow.AwayInput
+                        ? owner.AddFollowers(plan, follow, true) : plan;
+                }
 
                 var withPending = new OperationState(OperationState.CurrentSchema, Identity,
                     new(id, Identity, name, before, target, owner.clock.UtcNow), state?.LastCompleted, state?.LastCompletion);
