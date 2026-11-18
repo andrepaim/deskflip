@@ -61,3 +61,19 @@ Pre-release `mac-helper-test-ebea075` (archive SHA-256 `69eaf1bf…88327e0a`). T
 | LIFT (B031) | Not visible in this run |
 
 Discovery is fixed by settling the HID manager before copying devices. The HID++ collection is present on macOS in the device's usage pairs, with the same report sizes as on Windows. Opening it needs Input Monitoring, which the owner grants in System Settings. Pending: re-run with the grant and with the LIFT on the Mac.
+
+## Step 2 passed: read-only HID++ from the Mac — 18 November 2026
+
+The owner granted Input Monitoring to Terminal in System Settings, restarted Terminal, put both devices on the Mac and ran 0.1.1 `followers` (output pasted by the owner; host names and hashes kept out of Git).
+
+| Check | Result |
+| --- | --- |
+| Input Monitoring | `inputMonitoring=granted` (granted to Terminal, the responsible process when run from a shell) |
+| Elevation | None; no `sudo` |
+| Devices | K860 (B359) and LIFT (B031), both Bluetooth Low Energy, HID++ collection FF43:0202 in usage pairs, 20/20-byte reports; one IOHIDDevice each |
+| Identity | Both expose `SerialNumber`; enrollment uses its SHA-256 |
+| Resolved features | K860 change host 8 (version 1), hosts info 9; LIFT change host 10 (version 1), hosts info 11 — same as Windows |
+| State and slots | Three paired, named slots on each. Current channel is the Mac's (K860 1, LIFT 3); the PC is channel 2 on both, consistent with the Windows enrollment |
+| Errors | 0 timeouts, 0 I/O failures |
+
+IOKit report handling works for every read-only request (output report with the report ID byte included; input reports accepted). Opening without seizing coexists with Options+. Still unproven: change host from the Mac (gate M2), the removal callback as `Left` evidence, and permissions when Options+ launches the helper.
