@@ -103,3 +103,19 @@ Supervised, owner present, 0.1.1, one device per run. Recovery was each device's
 Between runs the owner moved the mouse to the PC and back by its own button (it was not moved by the keyboard run), then returned both devices to the Mac.
 
 M2 passes: a one-shot, non-elevated process on macOS, with Input Monitoring granted to Terminal, moved each device to the PC with exactly one change-host command, and the IOKit removal callback produced `Left`. Not yet shown: both devices in one run, the monitor command from the helper (M1), permissions when launched by Options+ (M3), and repeated reliability.
+
+## Step 7: full Mac action from Terminal — 18 November 2026
+
+Supervised, 0.1.1, `monitor-switch-mac` with no arguments, after a PC button press had moved everything to the Mac.
+
+Installed Windows helper log for the session (UTC):
+
+| Time | PC press | Result |
+| --- | --- | --- |
+| 17:50:30 | toggle | Confirmed 5→6, both followers Left |
+| 17:51:58 | toggle | Confirmed 6→5, no follower sent (monitor on the Mac while the mouse was on the PC) |
+| 17:53:34 | toggle | Confirmed 5→6, both followers Left |
+
+The last Mac run moved the monitor, keyboard and mouse to the PC. Owner: "all worked perfectly!!!" and "The last test I ran switched the mouse, keyboard and the monitor". Afterwards, read-only checks from the PC: monitor input 5, K860 and LIFT both on channel 2, no problems.
+
+Step 7 passes for that run. The 17:51:58 monitor-only press is not yet explained: it implies that before it the monitor showed the Mac while the mouse was on the PC, which an earlier Mac run with an unchanged image would cause. The Mac's own log for these runs has not been read yet. Gate M1 (ten monitor switches from the helper) remains open.
