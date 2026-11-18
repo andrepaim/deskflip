@@ -1,6 +1,8 @@
-# MonitorSwitch
+# deskflip
 
 One button moves André's desk between a Windows PC and a MacBook: a press of the round button on the Logitech LIFT switches the Samsung LU28R55 to the other computer, then sends the ERGO K860 keyboard and the LIFT itself there too. Each computer has a small one-shot helper that Logi Options+ launches from that button. There is no network link, background service or KVM hardware.
+
+The project was called MonitorSwitch until 18 November 2026, and that name stays inside the code: the executable, the install folders and the Mac app's bundle identifier keep it, because the button bindings and the Mac's Input Monitoring permission depend on them.
 
 **Status, 18 November 2026: in daily use in both directions.** The Windows helper (v1.2) and the Mac helper (0.1.2) are installed and bound to the button. Measured evidence, including the open items, is in the [Windows acceptance ledger](docs/ACCEPTANCE.md) and the [Mac acceptance ledger](mac/ACCEPTANCE.md).
 
@@ -79,4 +81,4 @@ CI (`.github/workflows/build.yml`) runs the .NET build and tests on Ubuntu and W
 
 Machine configuration, state, logs, serials, host names and local evidence stay out of Git. To undo the setup, follow [rollback](docs/ROLLBACK.md).
 
-No license has been selected. The source is published at https://github.com/andrepaim/monitor-switch.
+No license has been selected. The source is published at https://github.com/andrepaim/deskflip (formerly `monitor-switch`; old links redirect).
