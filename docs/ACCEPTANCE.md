@@ -185,3 +185,24 @@ Preserved both follower config generations in a separate verified local backup o
 After restoration, the installed v1.1 `status` returned exit 0 with input 5, matching enrollment and no target/state errors. Its `toggle --dry-run` returned exit 0 and planned 5→6 with no monitor write (125 ms internally). State and executable hashes were unchanged. The owner has been asked to test the existing button once to the Mac and once back to the PC after waiting at least three seconds; physical confirmation is pending.
 
 Owner-confirmed button recovery: "Both image changes worked." Logs corroborate two installed-helper toggles at 16:18:36 and 16:18:39 UTC: 5→6 and 6→5, each Confirmed with matching readback and exit 0, taking 1156 ms and 1140 ms internally. Final state has no pending operation, last observed input 5, and no helper process remains running. The original monitor-only button setup is restored and validated; no v1.2 installation or follower activation occurred.
+
+## Windows v1.2 installation and button-launched handoffs — 18 November 2026
+
+The owner authorized installing v1.2 and reactivating the enrolled followers. Root restore/build/test passed (0 warnings, 0 errors; 232 passed, 0 failed, 0 skipped) and a clean publish produced a 194-file package with `MonitorSwitch.exe` SHA-256 `1ffaf774c2a805c9e6daabba4bdb2748cd67b99b836304b0fceaeec798c6975d`.
+
+Under the operation lock, with no helper running and no pending operation, the v1.1 package (exe `390f8624…edd9`) and the monitor-only config were copied to a new local backup and verified by hash. The package in `%LOCALAPPDATA%\MonitorSwitch\bin` was replaced and all 194 files matched the tested manifest. The follower config preserved on 16 November was verified by hash (its non-`follow` sections equal the active config) and atomically activated; the monitor-only config became `config.previous.json`. `state.json` was unchanged. The Options+ binding already pointed at the same path and was not touched.
+
+Read-only checks with the installed binary: `status` exit 0; `followers` exit 0, both enrolled devices present with no problem; `toggle --dry-run` exit 0, planned 5→6, both followers `Ready`/`WouldSend`, nothing sent.
+
+Owner button presses on the PC, from the installed helper's log:
+
+| UTC | Action | Result |
+| --- | --- | --- |
+| 12:37:56 | Button, PC → Mac | Confirmed 5→6, both followers Ready / Accepted / Left, no rejection or I/O error, exit 0, 2625 ms |
+| 12:45:15 | Easy-Switch both devices to the PC, then button | Confirmed 6→5, no follower sent (toward home), exit 0, 1079 ms |
+| 12:45:50 | Button, PC → Mac | Confirmed 5→6, both followers Ready / Accepted / Left, exit 0, 2984 ms |
+| 12:46:01 | Easy-Switch back, then button | Confirmed 6→5, exit 0, 1266 ms |
+
+Diagnostic timeout counts on the keyboard were 1 and 3 (query/passive reads, not change-host retries); the mouse had none. Owner: "I did and did it again now, all worked." Final state: no pending operation, input 5, no helper process running.
+
+This is the first installed, button-launched PC→Mac handoff evidence (two of two). The return path remains manual (Easy-Switch plus one press on the PC) until the Mac helper passes M2/M3. R1 (ten full round trips with the Mac helper), S1 and lifecycle cases remain pending. Rollback: the separate local backup holds the v1.1 package and monitor-only config; removing both followers with the v1.2 helper restores monitor-only behavior without reinstalling.

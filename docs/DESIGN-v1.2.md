@@ -1,6 +1,6 @@
 # Keyboard and mouse follow the monitor
 
-Design addendum · 16 November 2026 · Version 1.2 · **Approved by the owner on 16 November 2026. Windows source implemented; individual follower gates and one combined handoff passed. Installation, Mac gates and full round-trip acceptance remain pending.**
+Design addendum · 16 November 2026 · Version 1.2 · **Approved by the owner on 16 November 2026. Windows source implemented and installed (18 November 2026); individual follower gates and button-launched PC→Mac handoffs passed. Mac gates and full round-trip acceptance remain pending.**
 
 This document extends [design v1.1](DESIGN-v1.1.md). Everything in v1.1 still applies unless a section here says otherwise. Read v1.1 first.
 
