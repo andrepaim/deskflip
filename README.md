@@ -6,7 +6,7 @@ An on-demand Windows helper that switches André's Samsung LU28R55 between the P
 
 The implementation follows [the v1.1 design](docs/DESIGN-v1.1.md).
 
-This branch also implements the Windows half of [v1.2 keyboard/mouse following](docs/DESIGN-v1.2.md). The current build passes 232 hardware-free tests, both individual follower gates, and one owner-confirmed combined monitor/keyboard/mouse handoff. It has not been installed. The installed v1.1 executable rejects the local config while followers are enrolled, so its existing button action is not currently usable. See the [Windows follower setup](docs/SETUP.md#windows-v12-keyboard-and-mouse-followers), [acceptance ledger](docs/ACCEPTANCE.md), and [Windows findings for Mac development](mac/WINDOWS-HANDOFF.md).
+This branch also implements the Windows half of [v1.2 keyboard/mouse following](docs/DESIGN-v1.2.md). The current build passes 232 hardware-free tests, both individual follower gates, and one owner-confirmed combined monitor/keyboard/mouse handoff. It has not been installed. After testing, the original monitor-only config was restored for the installed v1.1 helper; follower enrollment is preserved in a separate local backup. See the [Windows follower setup](docs/SETUP.md#windows-v12-keyboard-and-mouse-followers), [acceptance ledger](docs/ACCEPTANCE.md), and [Windows findings for Mac development](mac/WINDOWS-HANDOFF.md).
 
 ## Using it
 

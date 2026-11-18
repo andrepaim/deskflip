@@ -16,7 +16,7 @@ The Windows v1.2 source is implemented and its latest root restore/build/test pa
 
 These timings cover each helper operation, not measured destination connection latency. Only one successful combined handoff has been tested; this is not ten round trips or a reliability guarantee. No software switch was automatically retried or rolled back.
 
-The installed Windows package is still v1.1, while the local config now contains enrolled followers. That old binary rejects the new `follow` section. Coordinate the Windows update before using its bound mouse button for round trips. The validated v1.2 executable has only been run from the development build. Original package/config backups exist locally; do not copy them into Git.
+The installed Windows package is still v1.1. The original monitor-only config was restored after testing because that old binary rejects the new `follow` section. Follower enrollment and the original package/config are preserved in separate local backups, outside Git. Coordinate the Windows update and explicit follower-config activation before using its bound mouse button for full device-follow round trips. The validated v1.2 executable has only been run from the development build.
 
 ## Carry these details into the Swift implementation
 

@@ -1,6 +1,6 @@
 # Windows setup and calibration
 
-**Current state: the Windows v1.2 development build passed both individual follower gates and one owner-confirmed combined handoff. Installation and full round-trip/lifecycle acceptance remain pending. The button is still bound to the v1.1 copy in `%LOCALAPPDATA%\MonitorSwitch\bin`, which rejects the local config while followers are enrolled. On a new setup, do not bind a mouse button to the main executable until the supervised switch, fresh-process gate and probe matrix pass.**
+**Current state: the Windows v1.2 development build passed both individual follower gates and one owner-confirmed combined handoff. Installation and full round-trip/lifecycle acceptance remain pending. The button is still bound to the v1.1 copy in `%LOCALAPPDATA%\MonitorSwitch\bin`; the original monitor-only config has been restored, with follower enrollment preserved in a separate local backup. On a new setup, do not bind a mouse button to the main executable until the supervised switch, fresh-process gate and probe matrix pass.**
 
 All examples run from the repository root in PowerShell 7+. MonitorSwitch is a WinExe, so collect exit codes with `Start-Process -Wait -PassThru`.
 
