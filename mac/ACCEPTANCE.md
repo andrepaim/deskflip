@@ -90,3 +90,16 @@ Owner-pasted output, 0.1.1.
 | `--dry-run` | `DryRun`, exit 0, 763 ms; both devices Ready / WouldSend; monitor not attempted |
 
 No monitor command and no channel change were sent. Next: gate M2, keyboard only.
+
+## Gate M2: Mac sends each device to the PC — 18 November 2026
+
+Supervised, owner present, 0.1.1, one device per run. Recovery was each device's own Easy-Switch control.
+
+| Run | Mac result | PC-side evidence |
+| --- | --- | --- |
+| `follow --device keyboard` | Followed, exit 0: one change-host sent, Accepted, Left; no rejection, 0 timeouts, 0 I/O failures (reported by the owner) | Owner typed in the PC session: "I being able to type here is a good sign". Read-only Windows `followers`: K860 current channel 2 |
+| `follow --device mouse` | Owner: "All worked"; pasted result Followed, commandSent true, Accepted, Left, 0 timeouts, 0 I/O failures | Read-only Windows `followers`: LIFT current channel 2 |
+
+Between runs the owner moved the mouse to the PC and back by its own button (it was not moved by the keyboard run), then returned both devices to the Mac.
+
+M2 passes: a one-shot, non-elevated process on macOS, with Input Monitoring granted to Terminal, moved each device to the PC with exactly one change-host command, and the IOKit removal callback produced `Left`. Not yet shown: both devices in one run, the monitor command from the helper (M1), permissions when launched by Options+ (M3), and repeated reliability.
