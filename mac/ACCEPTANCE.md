@@ -46,3 +46,18 @@ The owner installed the `mac-helper-test-d087c9f` pre-release (anonymous downloa
 | `followers` | `accessStatus` `inputMonitoring=unknown`; `devices` empty |
 
 Interpretation: the binary runs and `m1ddc` is reachable. No follower was found, so device discovery is unproven. Two candidate causes, not yet distinguished: devices copied from the HID manager before its matching ran (hidapi schedules the manager and runs the run loop first), or the HID++ collection presented differently on macOS. Version 0.1.1 settles the manager first and reports every visible Logitech HID device with a plain-text summary.
+
+## Second Mac run, 0.1.1 (step 2, read-only) — 18 November 2026
+
+Pre-release `mac-helper-test-ebea075` (archive SHA-256 `69eaf1bf…88327e0a`). The owner pasted the `followers` output.
+
+| Check | Result |
+| --- | --- |
+| HID devices visible | 18; one Logitech device |
+| K860 (B359) | Bluetooth Low Energy; primary usage 0001:0006; usage pairs 0001:0006, 0001:0002, 0001:0001, 000C:0001, FF43:0202; max input/output report 20/20, feature 1 |
+| Identity | `SerialNumber` is exposed, so enrollment can use a hashed per-device identity (hash kept out of Git) |
+| Open | `IOHIDDeviceOpen` refused with `0xe00002e2` (`kIOReturnNotPermitted`) |
+| Input Monitoring | `IOHIDCheckAccess` reported unknown; no prompt appeared |
+| LIFT (B031) | Not visible in this run |
+
+Discovery is fixed by settling the HID manager before copying devices. The HID++ collection is present on macOS in the device's usage pairs, with the same report sizes as on Windows. Opening it needs Input Monitoring, which the owner grants in System Settings. Pending: re-run with the grant and with the LIFT on the Mac.
