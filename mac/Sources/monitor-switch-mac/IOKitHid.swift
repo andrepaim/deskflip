@@ -28,10 +28,51 @@ final class IOKitFollowerLocator: FollowerLocator {
     private let clock: MonotonicClock
     private let manager: IOHIDManager
 
+    private var settled = false
+
     init(clock: MonotonicClock) {
         self.clock = clock
         manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
-        IOHIDManagerSetDeviceMatching(manager, [kIOHIDVendorIDKey: HidKeys.vendor] as CFDictionary)
+        // Match everything so the overview can report how many devices are visible at all; Logitech is filtered below.
+        IOHIDManagerSetDeviceMatching(manager, nil)
+    }
+
+    /// Like hidapi: schedule the manager and let pending matching events run before copying devices.
+    /// The manager is never opened, so no device is opened or seized by enumeration.
+    private func allDevices() -> [IOHIDDevice] {
+        if !settled {
+            settled = true
+            IOHIDManagerScheduleWithRunLoop(manager, CFRunLoopGetCurrent(), CFRunLoopMode.defaultMode.rawValue)
+            let deadline = clock.monotonicMs + 500
+            while clock.monotonicMs < deadline,
+                  CFRunLoopRunInMode(.defaultMode, 0.05, true) == .handledSource {}
+        }
+        guard let set = IOHIDManagerCopyDevices(manager) as? Set<IOHIDDevice> else { return [] }
+        return Array(set)
+    }
+
+    private static func usageText(_ page: Int?, _ usage: Int?) -> String {
+        guard let page, let usage else { return "?" }
+        return String(format: "%04X:%04X", page, usage)
+    }
+
+    func overview() -> HidOverview {
+        let devices = allDevices()
+        let logitech = devices.filter { intProperty($0, kIOHIDVendorIDKey) == HidKeys.vendor }.map { device -> HidDeviceSummary in
+            let pairs = ((property(device, kIOHIDDeviceUsagePairsKey) as? [[String: Any]]) ?? []).map {
+                Self.usageText(($0[kIOHIDDeviceUsagePageKey] as? NSNumber)?.intValue, ($0[kIOHIDDeviceUsageKey] as? NSNumber)?.intValue)
+            }
+            let primary = Self.usageText(intProperty(device, kIOHIDPrimaryUsagePageKey), intProperty(device, kIOHIDPrimaryUsageKey))
+            let target = Self.usageText(HidKeys.usagePage, HidKeys.usage)
+            return HidDeviceSummary(productId: intProperty(device, kIOHIDProductIDKey).map { String(format: "%04X", $0) } ?? "?",
+                                    product: (property(device, kIOHIDProductKey) as? String) ?? "",
+                                    transport: (property(device, kIOHIDTransportKey) as? String) ?? "",
+                                    primaryUsage: primary, usagePairs: pairs,
+                                    maxInputReportSize: intProperty(device, kIOHIDMaxInputReportSizeKey),
+                                    maxOutputReportSize: intProperty(device, kIOHIDMaxOutputReportSizeKey),
+                                    isFollowerCandidate: primary == target || pairs.contains(target))
+        }
+        return HidOverview(totalDevices: devices.count, logitech: logitech)
     }
 
     func accessStatus() -> String {
@@ -42,8 +83,7 @@ final class IOKitFollowerLocator: FollowerLocator {
     }
 
     private func candidates() -> [(IOHIDDevice, DiscoveredFollower)] {
-        guard let set = IOHIDManagerCopyDevices(manager) as? Set<IOHIDDevice> else { return [] }
-        return set.compactMap { device in
+        return allDevices().compactMap { device in
             guard intProperty(device, kIOHIDVendorIDKey) == HidKeys.vendor, let product = intProperty(device, kIOHIDProductIDKey) else { return nil }
             let primary = intProperty(device, kIOHIDPrimaryUsagePageKey) == HidKeys.usagePage && intProperty(device, kIOHIDPrimaryUsageKey) == HidKeys.usage
             let pairs = (property(device, kIOHIDDeviceUsagePairsKey) as? [[String: Any]]) ?? []

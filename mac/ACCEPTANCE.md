@@ -31,3 +31,18 @@ Run 44313632840, commit `d087c9f`, job `mac-helper`. The first attempt was cance
 | Artifact | `monitor-switch-mac-d087c9faeb3a3b4dcdebf778b5ea480a9e8585f2`, kept until 2 December 2026 |
 
 Compiling is not running: nothing has executed on a Mac yet. Pending: plan §8 steps 1 to 10, starting with the read-only `followers` and `displays` commands.
+
+## First run on the Mac (plan §8 steps 1–2, read-only) — 18 November 2026
+
+The owner installed the `mac-helper-test-d087c9f` pre-release (anonymous download; release created because the owner does not sign in to GitHub on the work Mac). Results were reported verbally because output cannot be copied off the Mac.
+
+| Check | Result |
+| --- | --- |
+| macOS | 26.7.3 |
+| Gatekeeper | Blocked the first launch ("Apple could not verify … is free of malware"); the owner allowed this binary with Open Anyway in System Settings |
+| `--version` | 0.1.0 |
+| `m1ddc help` | Lists `display list` and `set` commands for `input n`, `input-alt n` and `pbp-input n`; no version shown |
+| `displays` | Exit normally; two displays: "Unknown Display" as 1 and "LU28R55" as 2, each with a UUID-like identifier |
+| `followers` | `accessStatus` `inputMonitoring=unknown`; `devices` empty |
+
+Interpretation: the binary runs and `m1ddc` is reachable. No follower was found, so device discovery is unproven. Two candidate causes, not yet distinguished: devices copied from the HID manager before its matching ran (hidapi schedules the manager and runs the run loop first), or the HID++ collection presented differently on macOS. Version 0.1.1 settles the manager first and reports every visible Logitech HID device with a plain-text summary.

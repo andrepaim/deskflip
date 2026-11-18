@@ -156,6 +156,11 @@ final class AppTests: XCTestCase {
         XCTAssertEqual(sends, 0)
         XCTAssertTrue(output.joined().contains("\"enrolledName\" : \"keyboard\""))
         XCTAssertEqual(tools.calls.count, 0)
+        let summary = output.filter { $0.hasPrefix("SUMMARY") || $0.hasPrefix("  ") }
+        XCTAssertEqual(summary.first, "SUMMARY fake; HID devices visible: 3; Logitech: 2; followers found: 2")
+        XCTAssertTrue(summary.contains("  LOGI B359 Bluetooth Low Energy primary 0001:0002 pairs 0001:0002,FF43:0202 in/out 20/20 HIDPP"))
+        XCTAssertTrue(summary.contains { $0.hasPrefix("  FOLLOWER B031") && $0.contains("channel=1") && $0.contains("problem=none") })
+        XCTAssertFalse(summary.joined().contains("pc-host"), "summary carries no host names")
     }
 
     func testProbeTouchesNoDevice() {

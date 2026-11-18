@@ -96,6 +96,13 @@ final class FakeLocator: FollowerLocator {
         return followers[present[index]]!
     }
     func accessStatus() -> String { "fake" }
+    func overview() -> HidOverview {
+        HidOverview(totalDevices: present.count + 1, logitech: present.map {
+            HidDeviceSummary(productId: $0.productId, product: "", transport: "Bluetooth Low Energy", primaryUsage: "0001:0002",
+                             usagePairs: ["0001:0002", "FF43:0202"], maxInputReportSize: 20, maxOutputReportSize: 20,
+                             isFollowerCandidate: true)
+        })
+    }
 }
 
 final class FakeLease: LockLease {

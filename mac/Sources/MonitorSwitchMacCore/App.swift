@@ -12,7 +12,7 @@ public enum ExitCodes {
 }
 
 public enum AppInfo {
-    public static let version = "0.1.0"
+    public static let version = "0.1.1"
     public static let cooldownMs: Int64 = 3000
     public static let defaultM1ddcPath = "/opt/homebrew/bin/m1ddc"
     public static let toolTimeoutMs: Int64 = 10_000
@@ -120,9 +120,31 @@ struct InventoryEntry: Codable {
 struct InventoryReport: Codable {
     var command = "followers"
     var accessStatus: String
+    var hid: HidOverview
     var devices: [InventoryEntry]
     var enrolledAbsent: [String]
     var configProblem: String?
+}
+
+enum InventorySummary {
+    /// Short plain-text lines the owner can read out when the JSON cannot be copied. No host names.
+    static func lines(_ report: InventoryReport) -> [String] {
+        var lines = ["SUMMARY \(report.accessStatus); HID devices visible: \(report.hid.totalDevices); "
+            + "Logitech: \(report.hid.logitech.count); followers found: \(report.devices.count)"]
+        for device in report.hid.logitech.sorted(by: { $0.productId < $1.productId }) {
+            lines.append("  LOGI \(device.productId) \(device.transport.isEmpty ? "?" : device.transport) primary \(device.primaryUsage) "
+                + "pairs \(device.usagePairs.isEmpty ? "-" : device.usagePairs.joined(separator: ",")) "
+                + "in/out \(device.maxInputReportSize.map(String.init) ?? "?")/\(device.maxOutputReportSize.map(String.init) ?? "?")"
+                + (device.isFollowerCandidate ? " HIDPP" : ""))
+        }
+        for entry in report.devices {
+            let paired = entry.slots.map { "\($0.channel):\($0.paired ? ($0.hostName == nil ? "paired" : "named") : "empty")" }
+            lines.append("  FOLLOWER \(entry.identity.productId) id=\(entry.platform["identitySource"] ?? "?") "
+                + "channel=\(entry.state.map { String($0.currentChannel) } ?? "?") slots=\(paired.joined(separator: ",")) "
+                + "problem=\(entry.problem ?? "none")")
+        }
+        return lines
+    }
 }
 
 public final class App {
@@ -315,7 +337,10 @@ public final class App {
             entries.append(entry)
         }
         let absent = (config?.devices ?? []).filter { enrolled in !discovered.contains { enrolled.identity.accepts($0.identity) } }.map(\.name)
-        printJSON(InventoryReport(accessStatus: locator.accessStatus(), devices: entries, enrolledAbsent: absent, configProblem: configProblem))
+        let report = InventoryReport(accessStatus: locator.accessStatus(), hid: locator.overview(), devices: entries,
+                                     enrolledAbsent: absent, configProblem: configProblem)
+        printJSON(report)
+        InventorySummary.lines(report).forEach(console)
         return ExitCodes.success
     }
 

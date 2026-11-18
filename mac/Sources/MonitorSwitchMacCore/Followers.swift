@@ -49,6 +49,30 @@ public enum LocatorError: Error, Equatable, CustomStringConvertible {
     }
 }
 
+/// One Logitech HID device as the platform presents it. Diagnosis only: no serials or registry paths.
+public struct HidDeviceSummary: Codable, Equatable {
+    public let productId: String
+    public let product: String
+    public let transport: String
+    public let primaryUsage: String
+    public let usagePairs: [String]
+    public let maxInputReportSize: Int?
+    public let maxOutputReportSize: Int?
+    public let isFollowerCandidate: Bool
+    public init(productId: String, product: String, transport: String, primaryUsage: String, usagePairs: [String],
+                maxInputReportSize: Int?, maxOutputReportSize: Int?, isFollowerCandidate: Bool) {
+        self.productId = productId; self.product = product; self.transport = transport; self.primaryUsage = primaryUsage
+        self.usagePairs = usagePairs; self.maxInputReportSize = maxInputReportSize; self.maxOutputReportSize = maxOutputReportSize
+        self.isFollowerCandidate = isFollowerCandidate
+    }
+}
+
+public struct HidOverview: Codable, Equatable {
+    public let totalDevices: Int
+    public let logitech: [HidDeviceSummary]
+    public init(totalDevices: Int, logitech: [HidDeviceSummary]) { self.totalDevices = totalDevices; self.logitech = logitech }
+}
+
 public protocol FollowerLocator: AnyObject {
     // Only Logitech 046D devices exposing usage page FF43 / usage 0202.
     func discover() throws -> [DiscoveredFollower]
@@ -56,6 +80,8 @@ public protocol FollowerLocator: AnyObject {
     func openUnique(_ identity: FollowerIdentity) throws -> FollowerSession
     // Read-only platform status (for example the Input Monitoring check), for reports only.
     func accessStatus() -> String
+    // Read-only: every Logitech HID device visible, matching or not, to diagnose discovery.
+    func overview() -> HidOverview
 }
 
 public enum FollowerSelection {
