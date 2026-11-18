@@ -77,3 +77,16 @@ The owner granted Input Monitoring to Terminal in System Settings, restarted Ter
 | Errors | 0 timeouts, 0 I/O failures |
 
 IOKit report handling works for every read-only request (output report with the report ID byte included; input reports accepted). Opening without seizing coexists with Options+. Still unproven: change host from the Mac (gate M2), the removal callback as `Left` evidence, and permissions when Options+ launches the helper.
+
+## Steps 3–4: enrollment and dry-run on the Mac — 18 November 2026
+
+Owner-pasted output, 0.1.1.
+
+| Check | Result |
+| --- | --- |
+| `m1ddc help` | A display is chosen by number or `(method=)<id>`, defaulting to the system UUID; `set input n` exists. Confirms `display <UUID> set input 5` |
+| `displays` | This time only the LU28R55, listed as display 1 (it was display 2 in the first run), confirming numbers are not identity |
+| `enroll --display <UUID> --keyboard-channel 2 --mouse-channel 2` | Both enrolled: channel 2, the PC's host name, identity hashed from `SerialNumber` |
+| `--dry-run` | `DryRun`, exit 0, 763 ms; both devices Ready / WouldSend; monitor not attempted |
+
+No monitor command and no channel change were sent. Next: gate M2, keyboard only.
