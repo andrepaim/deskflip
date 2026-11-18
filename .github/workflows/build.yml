@@ -45,9 +45,10 @@ jobs:
           cp "$(swift build -c release --arch arm64 --show-bin-path)/monitor-switch-mac" dist/
           codesign --force --sign - --identifier monitor-switch-mac dist/monitor-switch-mac
           codesign --verify --verbose dist/monitor-switch-mac
-          # tar keeps the executable bit, which artifact zips drop.
-          tar -czf monitor-switch-mac.tar.gz -C dist monitor-switch-mac
-          shasum -a 256 dist/monitor-switch-mac monitor-switch-mac.tar.gz | tee SHA256SUMS.txt
+          sh scripts/make-bundles.sh dist/monitor-switch-mac dist "$(sed -n 's/.*version = "\(.*\)".*/\1/p' Sources/MonitorSwitchMacCore/App.swift)"
+          # tar keeps the executable bit and bundle layout, which artifact zips drop.
+          tar -czf monitor-switch-mac.tar.gz -C dist monitor-switch-mac MonitorSwitch.app "MonitorSwitch Probe.app"
+          shasum -a 256 dist/monitor-switch-mac dist/MonitorSwitch.app/Contents/MacOS/monitor-switch-mac monitor-switch-mac.tar.gz | tee SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
           name: monitor-switch-mac-${{ github.sha }}

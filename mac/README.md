@@ -41,6 +41,8 @@ Files live in `~/Library/Application Support/MonitorSwitch/`: `config.json`, `co
 | `probe-trigger` | Appends one JSON line to `logs/trigger-probe-<date>.jsonl`. Touches no device |
 | `--version` | Prints the version |
 
+For Options+, which launches applications without arguments, the archive also has two background-only app bundles around the same binary (built by `scripts/make-bundles.sh`): `MonitorSwitch.app` runs the button action, and `MonitorSwitch Probe.app` runs only `probe-trigger`, named by the fixed `MonitorSwitchCommand` key in its Info.plist. When an app is launched this way, macOS asks for Input Monitoring for that app rather than for Terminal.
+
 Exit codes: 0 success, 2 busy or cooldown, 10 invalid configuration or command, 11 display missing or ambiguous, 17 preflight refused or devices did not all leave, 19 monitor command failed (nothing sent), 20 internal error, 21 not macOS.
 
 ## Assumptions to confirm on the Mac

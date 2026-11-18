@@ -12,7 +12,7 @@ public enum ExitCodes {
 }
 
 public enum AppInfo {
-    public static let version = "0.1.1"
+    public static let version = "0.1.2"
     public static let cooldownMs: Int64 = 3000
     public static let defaultM1ddcPath = "/opt/homebrew/bin/m1ddc"
     public static let toolTimeoutMs: Int64 = 10_000
@@ -45,6 +45,15 @@ public enum Command: Equatable {
 }
 
 public enum CommandLineParser {
+    /// Arguments for this launch. An app bundle launched by Options+ gets no arguments; its Info.plist may then
+    /// name one fixed command. Only `probe-trigger` is accepted that way, never arbitrary arguments.
+    public static func launchArguments(_ arguments: [String], bundleCommand: String?) -> [String] {
+        // Older LaunchServices passed a process serial number; it is never a real option.
+        let real = arguments.filter { !$0.hasPrefix("-psn_") }
+        if real.isEmpty && bundleCommand == "probe-trigger" { return ["probe-trigger"] }
+        return real
+    }
+
     public static func parse(_ arguments: [String]) throws -> Command {
         guard let verb = arguments.first else { return .button(dryRun: false) }
         var options = [String: String]()

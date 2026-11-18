@@ -217,6 +217,14 @@ final class AppTests: XCTestCase {
         XCTAssertEqual(try CommandLineParser.parse(["follow"]), .follow(device: nil))
     }
 
+    func testBundleCommandOnlySelectsProbeWhenLaunchedWithoutArguments() {
+        XCTAssertEqual(CommandLineParser.launchArguments([], bundleCommand: "probe-trigger"), ["probe-trigger"])
+        XCTAssertEqual(CommandLineParser.launchArguments(["-psn_0_12345"], bundleCommand: "probe-trigger"), ["probe-trigger"])
+        XCTAssertEqual(CommandLineParser.launchArguments([], bundleCommand: nil), [])
+        XCTAssertEqual(CommandLineParser.launchArguments([], bundleCommand: "follow"), [], "no other bundle command")
+        XCTAssertEqual(CommandLineParser.launchArguments(["--dry-run"], bundleCommand: "probe-trigger"), ["--dry-run"])
+    }
+
     func testM1ddcArgumentsAndDisplayMatching() throws {
         XCTAssertEqual(try M1ddc.switchToPCArguments(displayId: "ABC"), ["display", "ABC", "set", "input", "5"])
         XCTAssertThrowsError(try M1ddc.switchToPCArguments(displayId: "a b"))
