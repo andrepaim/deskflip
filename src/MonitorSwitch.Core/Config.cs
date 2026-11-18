@@ -10,7 +10,8 @@ public sealed record OperationSettings(int CooldownMs, int ReadAttempts, int Ver
 public sealed record FeedbackConfig(bool SuccessSound, bool ErrorSound);
 
 public sealed record AppConfig(int SchemaVersion, MonitorConfig Monitor, InputConfig Input,
-    OperationSettings Operation, FeedbackConfig Feedback)
+    OperationSettings Operation, FeedbackConfig Feedback,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] FollowConfig? Follow = null)
 {
     [JsonIgnore]
     public MonitorIdentity Identity => new(Monitor.DeviceInterfacePath, Monitor.EdidIdentityHash, Monitor.ProductId);
@@ -76,6 +77,7 @@ public static class ConfigParser
         Require(operation.CooldownMs is >= 1500 and <= 10000, "cooldownMs must be 1500-10000.");
         Require(operation.ReadAttempts is >= 1 and <= 3, "readAttempts must be 1-3.");
         Require(operation.VerificationDeadlineMs is >= 1000 and <= 8000, "verificationDeadlineMs must be 1000-8000.");
+        if (config.Follow is { } follow) FollowerValidation.Validate(follow);
     }
 
     /// <summary>Builds an enrollment from fresh discovery evidence, keeping prior cosmetic/operation settings.</summary>
@@ -86,7 +88,7 @@ public static class ConfigParser
                 candidate.DeviceInterfacePath, candidate.EdidIdentityHash!, true),
             previous?.Input ?? new(DeviceProfile.VcpCode, [5, 6], new() { ["5"] = "Input 5", ["6"] = "Input 6" }),
             previous?.Operation ?? new(1500, 3, 8000),
-            previous?.Feedback ?? new(false, true));
+            previous?.Feedback ?? new(false, true), previous?.Follow);
         Validate(config);
         return config;
     }

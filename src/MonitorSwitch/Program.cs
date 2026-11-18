@@ -27,15 +27,27 @@ internal static class Program
         var store = new JsonStateStore(AppPaths.State);
         var operationLock = new FileOperationLock(AppPaths.Lock);
         var configStore = new FileConfigStore(AppPaths.Config, AppPaths.ConfigBackup);
+        var followerLocator = new WindowsFollowerLocator(clock);
+        var followerCommands = new FollowerCommands(followerLocator, store, operationLock, configStore, clock);
 
-        if (command.Kind is CommandKind.Toggle or CommandKind.Set)
+        if (command.Kind is CommandKind.Toggle or CommandKind.Set or CommandKind.Follow)
         {
             var config = ConfigParser.Parse(configStore.ReadText() ?? throw new ConfigurationException("Not enrolled."));
             var reporter = new FileResultReporter(AppPaths.Logs, AppPaths.LastResult, clock, config.Monitor.EdidIdentityHash);
-            var result = new SwitchOrchestrator(locator, store, operationLock, clock, reporter, config).Run(command);
+            var result = command.Kind == CommandKind.Follow ? followerCommands.Follow(command, reporter)
+                : new SwitchOrchestrator(locator, store, operationLock, clock, reporter, config,
+                    new FollowerCoordinator(followerLocator)).Run(command);
             if (result.ExitCode == ExitCodes.Success && config.Feedback.SuccessSound) Feedback.Success();
             else if (result.ExitCode != ExitCodes.Success && result.Outcome != Outcomes.Busy && config.Feedback.ErrorSound) Feedback.Error();
             return result.ExitCode;
+        }
+
+        if (command.Kind is CommandKind.Followers or CommandKind.EnrollFollower)
+        {
+            var followerReport = followerCommands.Run(command, report => WriteReport(command, report, clock));
+            if (followerReport.Outcome == Outcomes.Busy && command.OutputPath is not null)
+                WriteReport(command, followerReport, clock);
+            return followerReport.ExitCode;
         }
 
         var maintenance = new MaintenanceCommands(locator, store, operationLock, configStore);
@@ -47,6 +59,12 @@ internal static class Program
             CommandKind.Enroll => maintenance.Enroll(command.DevicePath!, command.EdidHash!, command.ReplaceEnrollment),
             _ => throw new ArgumentOutOfRangeException(nameof(command)),
         };
+        WriteReport(command, report, clock);
+        return report.ExitCode;
+    }
+
+    private static void WriteReport(Command command, CommandReport report, IClock clock)
+    {
         var body = new
         {
             generatedAtUtc = clock.UtcNow,
@@ -61,6 +79,5 @@ internal static class Program
         // Enrollment has no --output; its evidence goes to last-result.json unless another operation owns it.
         else if (report.Outcome != Outcomes.Busy)
             AtomicFile.Write(AppPaths.LastResult, JsonSerializer.SerializeToUtf8Bytes(body, StrictJson.Output));
-        return report.ExitCode;
     }
 }
