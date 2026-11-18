@@ -1,6 +1,6 @@
 # Windows findings for the Mac helper
 
-16 November 2026. Read this alongside `../docs/MAC-HELPER-PLAN.md`, design v1.2 and `../AGENTS.md` before implementing the Swift helper. These are Windows findings, not macOS acceptance. No Swift package or Mac helper has been built in this checkout.
+16 November 2026. Read this alongside `../docs/MAC-HELPER-PLAN.md`, design v1.2 and `../AGENTS.md` before implementing the Swift helper. These are Windows findings, not macOS acceptance. The Swift package now exists under `mac/` (see `README.md`); it has not run on a Mac.
 
 ## Current evidence
 

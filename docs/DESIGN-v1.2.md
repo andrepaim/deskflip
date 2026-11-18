@@ -168,7 +168,7 @@ It needs no toggle logic: the button can only reach the Mac when the mouse is on
 
 The Mac cannot be assumed to read the monitor's input back, so step 3 is "command accepted", not Confirmed. If the monitor did not actually change, the devices still arrive at the PC, and one press there brings the monitor home (second row of the table in §3).
 
-The owner chose a small native Swift tool in this repository under `mac/`, built on the Mac. It follows the same fixed HID++ surface and guards. The step-by-step build plan is in [the Mac helper plan](MAC-HELPER-PLAN.md). Third-party tools such as `mxswitch` or `hidapitester` may be used to investigate a failing gate, not as the installed solution.
+The owner chose a small native Swift tool in this repository under `mac/`. On 18 November 2026 the owner decided that no source code lives on the Mac, which is a work machine: the helper is written and unit-tested on the Windows PC (Swift for Windows builds and tests the pure core), built, tested and ad hoc signed by CI on a macOS runner, and only the built binary is run and validated on the Mac. It follows the same fixed HID++ surface and guards. The step-by-step build plan is in [the Mac helper plan](MAC-HELPER-PLAN.md). Third-party tools such as `mxswitch` or `hidapitester` may be used to investigate a failing gate, not as the installed solution.
 
 On the Mac the preflight runs before the monitor command, because the monitor change may not be confirmable there.
 

@@ -2,7 +2,9 @@
 
 Plan · 16 November 2026 · For the session that builds the Mac half, on the Mac
 
-This plan is written for someone who has not seen the earlier work. The Mac helper is not implemented yet. The Windows half now has supervised device and combined-handoff evidence; read the [Windows handoff](../mac/WINDOWS-HANDOFF.md) for the current findings and limitations.
+This plan is written for someone who has not seen the earlier work.
+
+**Update, 18 November 2026.** The Mac is a work machine and holds no source code. The helper is written on the Windows PC, where Swift for Windows builds the package and runs the hardware-free tests; the IOKit, `m1ddc`, lock and file code compiles only on macOS. CI (`mac-helper` job, macOS runner) builds, tests and ad hoc signs the binary and publishes it as a workflow artifact. On the Mac, the owner only downloads that binary, installs it at a stable path and runs it; evidence comes back to the PC session, which records it in `mac/ACCEPTANCE.md`. Where this plan says "on the Mac" for building or committing, read "on the PC". The first implementation is written; see `mac/README.md` for the Mac-side steps. Hardware gates are still all pending. The Windows half now has supervised device and combined-handoff evidence; read the [Windows handoff](../mac/WINDOWS-HANDOFF.md) for the current findings and limitations.
 
 ## 1. Read first
 
@@ -60,11 +62,11 @@ The channel numbers and host names are machine configuration. They are deliberat
 - **Options+ through its own UI only.** No edits to its private files.
 - **Supervised hardware steps.** Every step that sends a channel change or switches the monitor is run with the owner present. Automated tests never touch hardware.
 - **Nothing private in Git.** No host names, Bluetooth addresses, serials, display UUIDs, config, logs or screenshots.
-- **Stay in your lane.** Change only files under `mac/`. The PC half is being built on the same branch under `src/` and `tests/`.
+- **Stay in your lane.** Mac helper code stays under `mac/`. The only change outside it is the `mac-helper` job in `.github/workflows/build.yml`. The PC half lives under `src/` and `tests/`.
 
 ## 5. Shape of the tool
 
-Swift package under `mac/`, built with the Swift toolchain already on the Mac (`swift build`, `swift test`, run from `mac/`).
+Swift package under `mac/`, built and tested with `swift build` and `swift test` from `mac/`: on the Windows PC for the core library, and in CI on macOS for everything (see the update at the top).
 
 | Target | Contents |
 | --- | --- |
@@ -156,7 +158,7 @@ Do not skip ahead. Each step that fails is a finding to report, not something to
 
 | Step | What | Done when |
 | --- | --- | --- |
-| 1 | Record the macOS version, the Swift toolchain version and that `m1ddc` is installed. Create the empty package; `swift build` and `swift test` pass | Recorded in `mac/ACCEPTANCE.md` |
+| 1 | Record the macOS version and the installed `m1ddc` version and help text on the Mac; the toolchain versions come from the PC and the CI log. `swift build` and `swift test` pass on the PC and in CI | Recorded in `mac/ACCEPTANCE.md` |
 | 2 | **First risk.** With the keyboard and mouse switched to the Mac by their own Easy-Switch controls, implement read-only discovery and the `followers` command | It prints both devices' current channel and paired slots, without `sudo`. Every permission prompt is recorded |
 | 3 | Packet layer, config and run sequence in the core library, with hardware-free tests | Tests in §9 pass |
 | 4 | `displays` and `enroll`. The owner picks the Samsung and the PC channels from the read-only output | Config written; `--dry-run` reports a correct plan |
@@ -194,4 +196,4 @@ Report these back, because the PC half and the design depend on them:
 - How long a device takes to arrive after the command.
 - Anything in the design that turned out to be wrong.
 
-Commit to this feature branch, touching only `mac/`. Pull with rebase before pushing.
+Code and evidence are committed from the PC, on this feature branch. Nothing is committed or built on the Mac.

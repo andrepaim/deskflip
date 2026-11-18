@@ -12,3 +12,8 @@ config.json
 state.json
 last-result.json
 !config.example.json
+.build/
+.swiftpm/
+mac/dist/
+mac/*.tar.gz
+mac/SHA256SUMS.txt
