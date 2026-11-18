@@ -2,7 +2,7 @@
 
 One-shot tool for the Mac half of [design v1.2](../docs/DESIGN-v1.2.md). On a button press it brings the monitor, the K860 and the LIFT to the PC. Build plan and rules: [MAC-HELPER-PLAN](../docs/MAC-HELPER-PLAN.md). Windows findings it is based on: [WINDOWS-HANDOFF](WINDOWS-HANDOFF.md).
 
-**Status: written and unit-tested; never run on a Mac. Every hardware gate (M1, M2, M3, R1, S1) is pending.**
+**Status, 18 November 2026: version 0.1.2 is installed on the Mac and bound to the LIFT round button through `MonitorSwitch.app`. Read-only access, M2 and M3 passed with measured evidence; the owner reports the remaining tests passed. See [ACCEPTANCE](ACCEPTANCE.md).**
 
 ## Where things happen
 

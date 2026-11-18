@@ -147,3 +147,9 @@ Installed Windows helper log after 17:54 UTC:
 Afterwards, read-only checks from the PC: monitor input 5, K860 and LIFT on channel 2, no problems, so the last Mac press returned the monitor and both devices.
 
 The 18:14:20 press, like the one at 17:51:58, ran while the monitor showed the Mac and the mouse was on the PC. Its cause (a Mac press whose monitor command did not change the image, or devices moved by hand during setup) is not established; the Mac log has not been read. R1 (ten full round trips with counted results on both sides), S1 and lifecycle cases remain open.
+
+## Owner-reported completion — 18 November 2026
+
+The owner reported: "All tests passed." No Mac-side output was provided for these runs; the counts and the sleep, reboot and Options+ restart cases are therefore the owner's report, not measured here.
+
+Measured on the PC (installed helper log, after 18:19 UTC): three more button presses PC→Mac at 18:21–18:23 UTC, each Confirmed 5→6 with both followers Accepted / Left, 2187–3391 ms. Counting from the binding of `MonitorSwitch.app`, the PC log shows five button-launched PC→Mac handoffs, all successful. Nothing pending and no helper process left running. The PC log alone cannot show ten round trips or the Mac's own results, and the two monitor-only PC presses at 17:51:58 and 18:14:20 remain unexplained.

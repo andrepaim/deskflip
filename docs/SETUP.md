@@ -1,6 +1,6 @@
 # Windows setup and calibration
 
-**Current state: the Windows v1.2 development build passed both individual follower gates and one owner-confirmed combined handoff. v1.2 was installed to `%LOCALAPPDATA%\MonitorSwitch\bin` on 18 November 2026 with both followers active, and two button-launched PC→Mac handoffs passed. The return is manual (Easy-Switch, then one press on the PC) until the Mac helper exists. Full round-trip/lifecycle acceptance remains pending; the v1.1 package and monitor-only config are kept in a separate local backup. On a new setup, do not bind a mouse button to the main executable until the supervised switch, fresh-process gate and probe matrix pass.**
+**Current state: the Windows v1.2 development build passed both individual follower gates and one owner-confirmed combined handoff. v1.2 was installed to `%LOCALAPPDATA%\MonitorSwitch\bin` on 18 November 2026 with both followers active, and two button-launched PC→Mac handoffs passed. Since then the Mac helper returns everything to the PC from the same button ([Mac helper](../mac/README.md)); the owner reports full round trips and the remaining tests passed. The v1.1 package and monitor-only config are kept in a separate local backup. On a new setup, do not bind a mouse button to the main executable until the supervised switch, fresh-process gate and probe matrix pass.**
 
 All examples run from the repository root in PowerShell 7+. MonitorSwitch is a WinExe, so collect exit codes with `Start-Process -Wait -PassThru`.
 
