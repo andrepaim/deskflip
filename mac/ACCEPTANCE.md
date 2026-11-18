@@ -130,3 +130,20 @@ Pre-release `mac-helper-test-4ed2491` (0.1.2, archive SHA-256 `5dc82aa6…7e2a78
 | Ten separate presses and one ~3 s hold | Probe log grew by exactly the expected eleven lines. Owner: "All worked, the number of lines were exactly what expected" |
 
 M3 passes: one launch per press, none repeated while held. Still to record: the Options+ action type used and the button's previous assignment (for rollback). Next: Input Monitoring for `MonitorSwitch.app`, then bind it and run the first button-launched return.
+
+## First button-launched round trips — 18 November 2026
+
+The owner granted Input Monitoring to `MonitorSwitch.app` in System Settings and bound the LIFT round button in Options+ for Mac to it. Owner: "Everything is working perfectly!!! I press a mouse button and switch everything from mac to PC then press again and pc -> mac!!!!!!"
+
+Installed Windows helper log after 17:54 UTC:
+
+| UTC | PC press | Result |
+| --- | --- | --- |
+| 18:01:39 | toggle | Confirmed 5→6, both followers Accepted / Left, 2468 ms |
+| 18:14:20 | toggle | Confirmed 6→5, no follower sent, 1078 ms |
+| 18:15:49 | toggle | Confirmed 5→6, both followers Accepted / Left, 3109 ms |
+| 18:18:47 | toggle | Confirmed 5→6, both followers Accepted / Left, 2672 ms |
+
+Afterwards, read-only checks from the PC: monitor input 5, K860 and LIFT on channel 2, no problems, so the last Mac press returned the monitor and both devices.
+
+The 18:14:20 press, like the one at 17:51:58, ran while the monitor showed the Mac and the mouse was on the PC. Its cause (a Mac press whose monitor command did not change the image, or devices moved by hand during setup) is not established; the Mac log has not been read. R1 (ten full round trips with counted results on both sides), S1 and lifecycle cases remain open.
