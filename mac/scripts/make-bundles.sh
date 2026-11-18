@@ -11,10 +11,10 @@ make_bundle() {
     name=$1 identifier=$2 command=$3
     app="$out/$name.app"
     mkdir -p "$app/Contents/MacOS"
-    cp "$binary" "$app/Contents/MacOS/monitor-switch-mac"
+    cp "$binary" "$app/Contents/MacOS/deskflip-mac"
     extra=""
     if [ -n "$command" ]; then
-        extra="    <key>MonitorSwitchCommand</key>
+        extra="    <key>DeskflipCommand</key>
     <string>$command</string>"
     fi
     cat > "$app/Contents/Info.plist" <<EOF
@@ -23,7 +23,7 @@ make_bundle() {
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>monitor-switch-mac</string>
+    <string>deskflip-mac</string>
     <key>CFBundleIdentifier</key>
     <string>$identifier</string>
     <key>CFBundleName</key>
@@ -47,5 +47,5 @@ EOF
     codesign --verify --strict --verbose "$app"
 }
 
-make_bundle "MonitorSwitch" "local.monitorswitch.helper" ""
-make_bundle "MonitorSwitch Probe" "local.monitorswitch.probe" "probe-trigger"
+make_bundle "Deskflip" "local.deskflip.helper" ""
+make_bundle "Deskflip Probe" "local.deskflip.probe" "probe-trigger"

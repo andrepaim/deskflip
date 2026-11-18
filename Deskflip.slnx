@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Deskflip/Deskflip.csproj" />
+    <Project Path="src/Deskflip.Core/Deskflip.Core.csproj" />
+    <Project Path="src/Deskflip.Windows/Deskflip.Windows.csproj" />
+    <Project Path="src/Deskflip.Runtime/Deskflip.Runtime.csproj" />
+    <Project Path="src/Deskflip.TriggerProbe/Deskflip.TriggerProbe.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Deskflip.Tests/Deskflip.Tests.csproj" />
+  </Folder>
+</Solution>

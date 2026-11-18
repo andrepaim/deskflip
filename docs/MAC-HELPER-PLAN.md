@@ -21,7 +21,7 @@ A small one-shot Swift command-line tool, launched by the LIFT mouse's round but
 2. Send the ERGO K860 keyboard and the LIFT mouse to their PC Easy-Switch channels.
 3. Write a result file and exit.
 
-The PC already has the other half (`MonitorSwitch.exe`), which sends everything to the Mac. The two halves share no code and no network connection; they only share the protocol in §6.
+The PC already has the other half (`Deskflip.exe`), which sends everything to the Mac. The two halves share no code and no network connection; they only share the protocol in §6.
 
 It needs no toggle logic. The button can only reach the Mac while the mouse is on the Mac, so the intent is always "go to the PC".
 
@@ -70,9 +70,9 @@ Swift package under `mac/`, built and tested with `swift build` and `swift test`
 
 | Target | Contents |
 | --- | --- |
-| `MonitorSwitchMacCore` (library) | Pure logic: packet encoding and reply matching, config parsing and validation, the run sequence against protocols. No IOKit, no process launching |
-| `monitor-switch-mac` (executable) | IOKit HID transport, the `m1ddc` runner, file lock, result and log writing, argument parsing |
-| `MonitorSwitchMacCoreTests` | Hardware-free tests with fakes |
+| `DeskflipCore` (library) | Pure logic: packet encoding and reply matching, config parsing and validation, the run sequence against protocols. No IOKit, no process launching |
+| `deskflip-mac` (executable) | IOKit HID transport, the `m1ddc` runner, file lock, result and log writing, argument parsing |
+| `DeskflipCoreTests` | Hardware-free tests with fakes |
 
 Commands:
 
@@ -86,7 +86,7 @@ Commands:
 | `follow [--device keyboard\|mouse]` | Supervised use: sends devices only, leaves the monitor alone |
 | `probe-trigger` | Appends one JSON line (timestamp, process ID, version). Touches no device. For the button test |
 
-Per-user files, all under `~/Library/Application Support/MonitorSwitch/`: `config.json`, `last-result.json`, `operation.lock`, `logs/`.
+Per-user files, all under `~/Library/Application Support/Deskflip/`: `config.json`, `last-result.json`, `operation.lock`, `logs/`.
 
 macOS ties a privacy grant such as Input Monitoring to the binary's identity. Install the helper at one stable path and sign it, at least ad hoc (`codesign -s -`), so the grant survives. Expect to re-approve after a rebuild, and record it when that happens. If Options+ can only launch applications, wrap the binary in a minimal application bundle; step 8 decides this.
 

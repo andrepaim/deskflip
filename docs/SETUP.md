@@ -1,12 +1,12 @@
 # Windows setup and calibration
 
-**Current state: the Windows v1.2 development build passed both individual follower gates and one owner-confirmed combined handoff. v1.2 was installed to `%LOCALAPPDATA%\MonitorSwitch\bin` on 18 November 2026 with both followers active, and two button-launched PC→Mac handoffs passed. Since then the Mac helper returns everything to the PC from the same button ([Mac helper](../mac/README.md)); the owner reports full round trips and the remaining tests passed. The v1.1 package and monitor-only config are kept in a separate local backup. On a new setup, do not bind a mouse button to the main executable until the supervised switch, fresh-process gate and probe matrix pass.**
+**Current state: the Windows v1.2 development build passed both individual follower gates and one owner-confirmed combined handoff. v1.2 was installed on 18 November 2026 with both followers active, in `%LOCALAPPDATA%\MonitorSwitch\bin` because that build predates the rename to deskflip ([migration](#migrating-an-install-from-before-the-rename)), and two button-launched PC→Mac handoffs passed. Since then the Mac helper returns everything to the PC from the same button ([Mac helper](../mac/README.md)); the owner reports full round trips and the remaining tests passed. The v1.1 package and monitor-only config are kept in a separate local backup. On a new setup, do not bind a mouse button to the main executable until the supervised switch, fresh-process gate and probe matrix pass.**
 
-All examples run from the repository root in PowerShell 7+. MonitorSwitch is a WinExe, so collect exit codes with `Start-Process -Wait -PassThru`.
+All examples run from the repository root in PowerShell 7+. Deskflip is a WinExe, so collect exit codes with `Start-Process -Wait -PassThru`.
 
 ```powershell
-$exe = (Resolve-Path .\artifacts\win-x64\app\MonitorSwitch.exe).Path
-function Invoke-MonitorSwitch { (Start-Process -FilePath $exe -ArgumentList $args -Wait -PassThru).ExitCode }
+$exe = (Resolve-Path .\artifacts\win-x64\app\Deskflip.exe).Path
+function Invoke-Deskflip { (Start-Process -FilePath $exe -ArgumentList $args -Wait -PassThru).ExitCode }
 ```
 
 ## 1. Build and package
@@ -21,15 +21,15 @@ Copy the whole folder when testing; an apphost alone is not the package.
 ## 2. Read-only discovery and explicit enrollment
 
 ```powershell
-Invoke-MonitorSwitch discover --json --output "$env:TEMP\ms-discover.json"
+Invoke-Deskflip discover --json --output "$env:TEMP\ms-discover.json"
 Get-Content "$env:TEMP\ms-discover.json"
 ```
 
 Check there is exactly one `SAM1017` candidate with `problem: null`. Enroll by copying its exact `deviceInterfacePath` and `edidIdentityHash` (quote the path; it contains `&`):
 
 ```powershell
-Invoke-MonitorSwitch enroll --device-path '"<deviceInterfacePath>"' --edid-hash <edidIdentityHash>
-Get-Content "$env:LOCALAPPDATA\MonitorSwitch\last-result.json"
+Invoke-Deskflip enroll --device-path '"<deviceInterfacePath>"' --edid-hash <edidIdentityHash>
+Get-Content "$env:LOCALAPPDATA\Deskflip\last-result.json"
 ```
 
 Re-enrollment needs `--replace`, refuses while a pending operation exists, and backs up the old config to `config.previous.json`. Never copy `config.example.json` as enrollment.
@@ -37,8 +37,8 @@ Re-enrollment needs `--replace`, refuses while a pending operation exists, and b
 Confirm read-only behavior before any write:
 
 ```powershell
-Invoke-MonitorSwitch status --output "$env:TEMP\ms-status.json"
-Invoke-MonitorSwitch toggle --dry-run      # plans only; see last-result.json
+Invoke-Deskflip status --output "$env:TEMP\ms-status.json"
+Invoke-Deskflip toggle --dry-run      # plans only; see last-result.json
 ```
 
 ## 3. Supervised physical switch (owner present)
@@ -46,9 +46,9 @@ Invoke-MonitorSwitch toggle --dry-run      # plans only; see last-result.json
 Recovery path: the monitor's own input button/OSD. Note the current image and input first. Labels are cosmetic; record which physical source (PC or laptop) each value shows.
 
 ```powershell
-Invoke-MonitorSwitch set --input 6   # expect laptop image; exit 0 = target read back
-Get-Content "$env:LOCALAPPDATA\MonitorSwitch\last-result.json"
-Invoke-MonitorSwitch set --input 5   # expect PC image
+Invoke-Deskflip set --input 6   # expect laptop image; exit 0 = target read back
+Get-Content "$env:LOCALAPPDATA\Deskflip\last-result.json"
+Invoke-Deskflip set --input 5   # expect PC image
 ```
 
 Record exit code, `before/target/observed`, `write.apiAccepted`, elapsed time, and what the owner actually sees. API acceptance is not visual success.
@@ -58,10 +58,10 @@ Record exit code, `before/target/observed`, `write.apiAccepted`, elapsed time, a
 With input 6 (laptop) selected by step 3 and that process exited, every handle has been released. A new launch must rediscover the monitor and restore the PC:
 
 ```powershell
-Get-Process MonitorSwitch -ErrorAction SilentlyContinue   # must be empty
-Invoke-MonitorSwitch set --input 6
-Get-Process MonitorSwitch -ErrorAction SilentlyContinue   # must be empty
-Invoke-MonitorSwitch toggle                               # new process: expect PC image, exit 0
+Get-Process Deskflip -ErrorAction SilentlyContinue   # must be empty
+Invoke-Deskflip set --input 6
+Get-Process Deskflip -ErrorAction SilentlyContinue   # must be empty
+Invoke-Deskflip toggle                               # new process: expect PC image, exit 0
 ```
 
 If discovery fails while the laptop input is shown (exit 11), the PC's display path disappeared: record it and follow design §10. Do not add a resident handle keeper.
@@ -69,9 +69,9 @@ If discovery fails while the laptop input is shown (exit 11), the PC's display p
 ## 5. Harmless probe and button selection
 
 ```powershell
-$probeExe = (Resolve-Path .\artifacts\win-x64\probe\MonitorSwitch.TriggerProbe.exe).Path
+$probeExe = (Resolve-Path .\artifacts\win-x64\probe\Deskflip.TriggerProbe.exe).Path
 (Start-Process -FilePath $probeExe -Wait -PassThru).ExitCode
-Get-Content "$env:LOCALAPPDATA\MonitorSwitch\logs\trigger-probe-$((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd')).jsonl" -Tail 10
+Get-Content "$env:LOCALAPPDATA\Deskflip\logs\trigger-probe-$((Get-Date).ToUniversalTime().ToString('yyyy-MM-dd')).jsonl" -Tail 10
 ```
 
 Exit 0 means an entry was flushed, 20 means local logging failed, 10 means arguments were passed. Logs rotate at 1 MB and are kept seven days.
@@ -83,9 +83,20 @@ Exit 0 means an entry was flushed, 20 means local logging failed, 10 means argum
 
 ## 6. Bind the real switch
 
-Only after the probe gate passes, replace the probe with the absolute path of `MonitorSwitch.exe` (no arguments). Repeat lifecycle checks while it verifies or is busy, then ten complete round trips. Record native and visual results separately in [acceptance](ACCEPTANCE.md).
+Only after the probe gate passes, replace the probe with the absolute path of `Deskflip.exe` (no arguments). Repeat lifecycle checks while it verifies or is busy, then ten complete round trips. Record native and visual results separately in [acceptance](ACCEPTANCE.md).
 
-Install only the tested complete package to the approved stable per-user directory (`%LOCALAPPDATA%\MonitorSwitch\bin`). Update only with no operation active, keeping one prior package/config.
+Install only the tested complete package to the approved stable per-user directory (`%LOCALAPPDATA%\Deskflip\bin`). Update only with no operation active, keeping one prior package/config.
+
+## Migrating an install from before the rename
+
+Builds before the rename used `MonitorSwitch.exe` and `%LOCALAPPDATA%\MonitorSwitch`. A new build reads only `%LOCALAPPDATA%\Deskflip`, so moving to it is a one-time, owner-run migration. Nothing is switched and no device is sent.
+
+1. Check that no helper is running (`Get-Process MonitorSwitch, Deskflip -ErrorAction SilentlyContinue` is empty) and that the old `state.json` has `"pending": null`.
+2. Create `%LOCALAPPDATA%\Deskflip` and copy `config.json`, `config.previous.json` and `state.json` into it from `%LOCALAPPDATA%\MonitorSwitch`. The file formats did not change.
+3. Copy the complete tested package (`artifacts\win-x64\app`) to `%LOCALAPPDATA%\Deskflip\bin` and check it against its SHA-256 manifest.
+4. With the new `Deskflip.exe`, run `status`, `followers --output PATH` and `toggle --dry-run`. All must exit 0; the dry run plans the expected input and shows both followers as `WouldSend`.
+5. In Options+, point the round button at `%LOCALAPPDATA%\Deskflip\bin\Deskflip.exe` (no arguments), then test one press each way.
+6. Keep `%LOCALAPPDATA%\MonitorSwitch` until the new install has been in use for a while, then remove it.
 
 ## Recovery
 
@@ -109,7 +120,7 @@ These are future supervised setup steps, not evidence that this build has contro
 5. Gate P1: supervised `follow --device keyboard`; the owner confirms typing on the Mac, then returns it with Easy-Switch. Gate P2: supervised `follow --device mouse`; confirm pointer movement on the Mac and recover it with the underside button. Record actual arrival separately from `Left`, `StillHere` or `Unknown` in the result. Each run sends at most one change-host command to the selected device. Never automatically repeat a failed or uncertain run.
 6. After P1/P2 and Mac M2/M3 pass, arrange the approved installation/button setup and run the full round-trip, asleep-host, reconnect and lifecycle matrix. A Windows-only one-press return is not possible after the mouse leaves the PC; the Mac half or physical Easy-Switch recovery is required.
 
-Command forms (use the `Invoke-MonitorSwitch` wrapper above with `$exe` pointing to the build being tested):
+Command forms (use the `Invoke-Deskflip` wrapper above with `$exe` pointing to the build being tested):
 
 ```text
 followers --output PATH

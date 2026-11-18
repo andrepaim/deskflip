@@ -13,8 +13,8 @@ try {
     & (Join-Path $PSScriptRoot 'Build.ps1')
 
     $targets = @(
-        @{ Name = 'app'; Project = 'src/MonitorSwitch/MonitorSwitch.csproj' },
-        @{ Name = 'probe'; Project = 'src/MonitorSwitch.TriggerProbe/MonitorSwitch.TriggerProbe.csproj' }
+        @{ Name = 'app'; Project = 'src/Deskflip/Deskflip.csproj' },
+        @{ Name = 'probe'; Project = 'src/Deskflip.TriggerProbe/Deskflip.TriggerProbe.csproj' }
     )
     foreach ($target in $targets) {
         $publishDirectory = Join-Path $projectRoot "artifacts/$Runtime/$($target.Name)"

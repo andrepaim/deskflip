@@ -33,12 +33,12 @@ Update, 18 November 2026: v1.2 is installed on Windows with both followers activ
 
 Use these as behavior references, not a new shared runtime dependency:
 
-- `../src/MonitorSwitch.Core/Hidpp.cs`: packet factories, matching, feature/host queries, one-send session guard and bounded observation.
-- `../src/MonitorSwitch.Core/Followers.cs`: all-device preflight, ordering, outcomes and diagnostic metadata.
-- `../src/MonitorSwitch.Core/FollowerCommands.cs`: enrollment and explicit single-device tests.
-- `../tests/MonitorSwitch.Tests/HidppTests.cs`: packet/error/notification fixtures, ambiguous-index refusal, host-name pagination, immediate/late rejection handling, passive-window timing and timeout bounds.
-- `../tests/MonitorSwitch.Tests/FollowerTests.cs`: zero sends on any preflight failure, order, uncertain writes, AlreadyThere and report/state separation.
-- `../tests/MonitorSwitch.Tests/FollowerConfigAndCommandsTests.cs`: strict optional config, invalid fields, backup preservation and read-only commands.
+- `../src/Deskflip.Core/Hidpp.cs`: packet factories, matching, feature/host queries, one-send session guard and bounded observation.
+- `../src/Deskflip.Core/Followers.cs`: all-device preflight, ordering, outcomes and diagnostic metadata.
+- `../src/Deskflip.Core/FollowerCommands.cs`: enrollment and explicit single-device tests.
+- `../tests/Deskflip.Tests/HidppTests.cs`: packet/error/notification fixtures, ambiguous-index refusal, host-name pagination, immediate/late rejection handling, passive-window timing and timeout bounds.
+- `../tests/Deskflip.Tests/FollowerTests.cs`: zero sends on any preflight failure, order, uncertain writes, AlreadyThere and report/state separation.
+- `../tests/Deskflip.Tests/FollowerConfigAndCommandsTests.cs`: strict optional config, invalid fields, backup preservation and read-only commands.
 
 In particular, port the regressions for a delayed change-host error interleaved with a state reply, a foreign software-ID error that must be ignored, a late duplicate root reply yielding equal indexes, and a write that throws after it might have taken effect. All tests remain hardware-free.
 

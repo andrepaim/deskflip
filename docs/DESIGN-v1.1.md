@@ -6,7 +6,7 @@ Implementation design · 12 November 2026 · Version 1.1
 
 Use an extra button on André's Logitech LIFT to alternate the Samsung monitor between the desktop PC and laptop. Keep both HDMI cables in place. Use the desktop's native Windows DDC/CI interface; do not use the monitor's USB service port or a video switch box.
 
-Recommended MVP: Options+ launches a short-lived, silent `MonitorSwitch.exe` on each deliberate press. No arguments means toggle: read actual input, switch decimal 5 ↔ 6, verify, and exit. Do not synthesize shortcuts, intercept mouse events, or change Deskflow. Normal switching leaves the selected input in place; the five-second restoration used in earlier diagnostics is not product behavior.
+Recommended MVP: Options+ launches a short-lived, silent `Deskflip.exe` on each deliberate press. No arguments means toggle: read actual input, switch decimal 5 ↔ 6, verify, and exit. Do not synthesize shortcuts, intercept mouse events, or change Deskflow. Normal switching leaves the selected input in place; the five-second restoration used in earlier diagnostics is not product behavior.
 
 This document is a specification, not evidence of installation or successful acceptance. The scaffold must fail safely until the Windows backend, enrollment, state machine, and acceptance gates are complete. No mouse binding, display setting, or Deskflow configuration is authorized by scaffolding alone.
 
@@ -56,7 +56,7 @@ Options+ must emit one launch per deliberate press and no repeated launches whil
 ## 4. Architecture and implementation stack
 
 ```text
-LIFT side button → Options+ All Applications action → absolute MonitorSwitch.exe
+LIFT side button → Options+ All Applications action → absolute Deskflip.exe
   → validate command/config → exclusive operation lock
   → pending reconciliation or cooldown
   → uniquely locate enrolled physical monitor → read actual input
@@ -68,11 +68,11 @@ LIFT side button → Options+ All Applications action → absolute MonitorSwitch
 Deskflow remains unchanged. Use C#/.NET 10 LTS, `net10.0-windows` for Windows projects, and a self-contained Windows `WinExe`. Verify architecture before publishing `win-x64`; provide another build when needed. NativeAOT is optional. Use reviewed/generated P/Invoke to user32.dll and dxva2.dll; do not compile PowerShell dynamically on each click. Pure contracts and tests may target `net10.0` for deterministic non-Windows testing.
 
 ```text
-src/MonitorSwitch/                 WinExe, command boundary and reporting
-src/MonitorSwitch.Core/            Pure models, validation, orchestration contracts
-src/MonitorSwitch.Windows/         Native discovery, DDC and handle ownership
-src/MonitorSwitch.TriggerProbe/    Dedicated no-argument WinExe, no DDC dependency
-tests/MonitorSwitch.Tests/         Unit and fake-backend tests, no hardware writes
+src/Deskflip/                 WinExe, command boundary and reporting
+src/Deskflip.Core/            Pure models, validation, orchestration contracts
+src/Deskflip.Windows/         Native discovery, DDC and handle ownership
+src/Deskflip.TriggerProbe/    Dedicated no-argument WinExe, no DDC dependency
+tests/Deskflip.Tests/         Unit and fake-backend tests, no hardware writes
 docs/SETUP.md                     Enrollment, calibration, binding and recovery
 docs/ACCEPTANCE.md                Actual evidence and pending acceptance items
 docs/ROLLBACK.md                  Exact removal and assignment restoration
@@ -95,11 +95,11 @@ Scaffolding is a distinct deliverable: project references, safe entry points, co
 
 An explicit output path is only a report destination, never an alternative config source. WinExe output may be invisible to a terminal; use structured files and exit codes. PowerShell examples use `Start-Process -Wait -PassThru` for exit-code collection. No arbitrary VCP or shell-command configuration.
 
-Per-user files under `%LOCALAPPDATA%\MonitorSwitch`:
+Per-user files under `%LOCALAPPDATA%\Deskflip`:
 
 ```text
-bin\MonitorSwitch.exe
-bin\MonitorSwitch.TriggerProbe.exe
+bin\Deskflip.exe
+bin\Deskflip.TriggerProbe.exe
 config.json
 state.json
 last-result.json
@@ -154,9 +154,9 @@ Interop uses pointer-width-safe handles, Windows BOOL marshaling, Unicode fixed-
 
 All commands using native monitor access coordinate through the same nonblocking exclusive lock. Busy requests never queue. Read-only commands may return Busy; they must not reconcile/clear pending state, change cooldown, or overwrite the active writer's authoritative state. Reports use unique temporary files; requested outputs must not alias config/state/log files.
 
-The lock must cover every process that can access the same per-user state. A `Local\MonitorSwitch-<user-id-hash>` mutex is session scoped: enforce one participating interactive session or use a reviewed cross-session lock. An abandoned lock requires reading durable state before any new write. Named mutex ownership is thread-affine; do not release from an unrelated continuation thread.
+The lock must cover every process that can access the same per-user state. A `Local\Deskflip-<user-id-hash>` mutex is session scoped: enforce one participating interactive session or use a reviewed cross-session lock. An abandoned lock requires reading durable state before any new write. Named mutex ownership is thread-affine; do not release from an unrelated continuation thread.
 
-Implementation decision: the lock is an exclusive (`FileShare.None`), nonblocking open of `%LOCALAPPDATA%\MonitorSwitch\operation.lock`. It covers every session sharing that directory, has no thread affinity, and the OS releases it if the process dies; the next holder always reads `state.json` before any write.
+Implementation decision: the lock is an exclusive (`FileShare.None`), nonblocking open of `%LOCALAPPDATA%\Deskflip\operation.lock`. It covers every session sharing that directory, has no thread affinity, and the OS releases it if the process dies; the next holder always reads `state.json` before any write.
 
 `state.json` is the single authoritative atomic document: schema, enrolled identity (device path and EDID hash, matching config; a mismatch fails closed), pending operation, last completed outcome, and boot-aware monotonic cooldown metadata. Logs and last-result are derived reports, not recovery authority. Missing state at first use is allowed; corrupt existing state fails closed. A reboot/clock correction must not create infinite cooldown. Pending state survives reboot and app restart.
 
@@ -278,12 +278,12 @@ Keep a clock/delay abstraction, locator, operation lock, atomic state store and 
 Expected PowerShell build pipeline (from repo root):
 
 ```powershell
-dotnet restore MonitorSwitch.slnx
-dotnet build MonitorSwitch.slnx -c Release --no-restore
-dotnet test MonitorSwitch.slnx -c Release --no-build
-dotnet publish .\src\MonitorSwitch\MonitorSwitch.csproj `
+dotnet restore Deskflip.slnx
+dotnet build Deskflip.slnx -c Release --no-restore
+dotnet test Deskflip.slnx -c Release --no-build
+dotnet publish .\src\Deskflip\Deskflip.csproj `
   -c Release -r win-x64 --self-contained true -o .\artifacts\win-x64\app
-dotnet publish .\src\MonitorSwitch.TriggerProbe\MonitorSwitch.TriggerProbe.csproj `
+dotnet publish .\src\Deskflip.TriggerProbe\Deskflip.TriggerProbe.csproj `
   -c Release -r win-x64 --self-contained true -o .\artifacts\win-x64\probe
 # Or: .\scripts\Publish.ps1 -Runtime win-x64 (also writes per-folder SHA-256 manifests)
 ```

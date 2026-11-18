@@ -32,8 +32,8 @@ The design is in [v1.1](docs/DESIGN-v1.1.md) (the monitor switch) and [v1.2](doc
 | | Windows | Mac |
 | --- | --- | --- |
 | Code | `src/`, C# / .NET 10 | `mac/`, Swift |
-| Launched by | Options+: `%LOCALAPPDATA%\MonitorSwitch\bin\MonitorSwitch.exe` | Options+ for Mac: `~/Applications/MonitorSwitch/MonitorSwitch.app` |
-| Per-user files | `%LOCALAPPDATA%\MonitorSwitch` | `~/Library/Application Support/MonitorSwitch` |
+| Launched by | Options+: `%LOCALAPPDATA%\Deskflip\bin\Deskflip.exe` | Options+ for Mac: `~/Applications/Deskflip/Deskflip.app` |
+| Per-user files | `%LOCALAPPDATA%\Deskflip` | `~/Library/Application Support/Deskflip` |
 | Monitor control | dxva2 `SetVCPFeature`, readback | `m1ddc display <UUID> set input 5` |
 | Device access | Shared HID handle | IOKit HID, not seized; needs Input Monitoring |
 | Setup | [Windows setup](docs/SETUP.md) | [Mac helper](mac/README.md) |
@@ -42,11 +42,11 @@ Both use the same per-device protocol surface and the same guards; they share no
 
 ### Windows commands
 
-`MonitorSwitch.exe` with no arguments (or `toggle`) is the button action. Other commands: `discover`, `status`, `diagnose`, `enroll`, `set --input 5|6` (monitor only), `toggle --dry-run`, `toggle --no-follow`, `followers`, `enroll-follower`, `follow [--device NAME]` and `probe-trigger`. Details and exit codes are in [setup](docs/SETUP.md) and design [v1.1 §7](docs/DESIGN-v1.1.md) / [v1.2 §6](docs/DESIGN-v1.2.md).
+`Deskflip.exe` with no arguments (or `toggle`) is the button action. Other commands: `discover`, `status`, `diagnose`, `enroll`, `set --input 5|6` (monitor only), `toggle --dry-run`, `toggle --no-follow`, `followers`, `enroll-follower`, `follow [--device NAME]` and `probe-trigger`. Details and exit codes are in [setup](docs/SETUP.md) and design [v1.1 §7](docs/DESIGN-v1.1.md) / [v1.2 §6](docs/DESIGN-v1.2.md).
 
 ### Mac commands
 
-`MonitorSwitch.app`, or `monitor-switch-mac` with no arguments, is the button action. Other commands: `--dry-run`, `followers`, `displays`, `enroll`, `follow [--device keyboard|mouse]`, `probe-trigger` and `--version`. See the [Mac helper README](mac/README.md).
+`Deskflip.app`, or `deskflip-mac` with no arguments, is the button action. Other commands: `--dry-run`, `followers`, `displays`, `enroll`, `follow [--device keyboard|mouse]`, `probe-trigger` and `--version`. See the [Mac helper README](mac/README.md).
 
 ## Build and test
 
@@ -67,12 +67,12 @@ CI (`.github/workflows/build.yml`) runs the .NET build and tests on Ubuntu and W
 
 | Path | Purpose |
 | --- | --- |
-| `src/MonitorSwitch` | Windows WinExe command boundary |
-| `src/MonitorSwitch.Core` | Contracts, parser, config, orchestrator, HID++ session, followers |
-| `src/MonitorSwitch.Windows` | Monitor discovery, DDC session, HID transport, clock |
-| `src/MonitorSwitch.Runtime` | Per-user paths, atomic files, stores, lock, logs, reports |
-| `src/MonitorSwitch.TriggerProbe` | Harmless probe for testing the button |
-| `tests/MonitorSwitch.Tests` | Windows hardware-free tests |
+| `src/Deskflip` | Windows WinExe command boundary |
+| `src/Deskflip.Core` | Contracts, parser, config, orchestrator, HID++ session, followers |
+| `src/Deskflip.Windows` | Monitor discovery, DDC session, HID transport, clock |
+| `src/Deskflip.Runtime` | Per-user paths, atomic files, stores, lock, logs, reports |
+| `src/Deskflip.TriggerProbe` | Harmless probe for testing the button |
+| `tests/Deskflip.Tests` | Windows hardware-free tests |
 | `mac/` | Mac helper: Swift package, tests, app bundle script, Mac docs and evidence |
 | `docs/` | Designs, Mac build plan, Windows setup, acceptance evidence, rollback |
 | `config.example.json` | Illustrative Windows config shape; not a valid enrollment |

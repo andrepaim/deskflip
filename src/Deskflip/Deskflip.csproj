@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Deskflip.Core/Deskflip.Core.csproj" />
+    <ProjectReference Include="../Deskflip.Runtime/Deskflip.Runtime.csproj" />
+    <ProjectReference Include="../Deskflip.Windows/Deskflip.Windows.csproj" />
+  </ItemGroup>
+</Project>

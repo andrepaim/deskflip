@@ -6,11 +6,11 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Push-Location $projectRoot
 try {
-    & dotnet restore MonitorSwitch.slnx
+    & dotnet restore Deskflip.slnx
     if ($LASTEXITCODE -ne 0) { throw 'Restore failed.' }
-    & dotnet build MonitorSwitch.slnx -c Release --no-restore
+    & dotnet build Deskflip.slnx -c Release --no-restore
     if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
-    & dotnet test MonitorSwitch.slnx -c Release --no-build
+    & dotnet test Deskflip.slnx -c Release --no-build
     if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
 }
 finally {

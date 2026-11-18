@@ -22,9 +22,9 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - run: dotnet restore MonitorSwitch.slnx
-      - run: dotnet build MonitorSwitch.slnx -c Release --no-restore
-      - run: dotnet test MonitorSwitch.slnx -c Release --no-build
+      - run: dotnet restore Deskflip.slnx
+      - run: dotnet build Deskflip.slnx -c Release --no-restore
+      - run: dotnet test Deskflip.slnx -c Release --no-build
 
   # The Mac helper is written and unit-tested on Windows, then built, tested and ad hoc signed here.
   # The artifact is run and validated on the Mac only in supervised sessions.
@@ -42,17 +42,17 @@ jobs:
       - name: Sign and package
         run: |
           mkdir -p dist
-          cp "$(swift build -c release --arch arm64 --show-bin-path)/monitor-switch-mac" dist/
-          codesign --force --sign - --identifier monitor-switch-mac dist/monitor-switch-mac
-          codesign --verify --verbose dist/monitor-switch-mac
-          sh scripts/make-bundles.sh dist/monitor-switch-mac dist "$(sed -n 's/.*version = "\(.*\)".*/\1/p' Sources/MonitorSwitchMacCore/App.swift)"
+          cp "$(swift build -c release --arch arm64 --show-bin-path)/deskflip-mac" dist/
+          codesign --force --sign - --identifier deskflip-mac dist/deskflip-mac
+          codesign --verify --verbose dist/deskflip-mac
+          sh scripts/make-bundles.sh dist/deskflip-mac dist "$(sed -n 's/.*version = "\(.*\)".*/\1/p' Sources/DeskflipCore/App.swift)"
           # tar keeps the executable bit and bundle layout, which artifact zips drop.
-          tar -czf monitor-switch-mac.tar.gz -C dist monitor-switch-mac MonitorSwitch.app "MonitorSwitch Probe.app"
-          shasum -a 256 dist/monitor-switch-mac dist/MonitorSwitch.app/Contents/MacOS/monitor-switch-mac monitor-switch-mac.tar.gz | tee SHA256SUMS.txt
+          tar -czf deskflip-mac.tar.gz -C dist deskflip-mac Deskflip.app "Deskflip Probe.app"
+          shasum -a 256 dist/deskflip-mac dist/Deskflip.app/Contents/MacOS/deskflip-mac deskflip-mac.tar.gz | tee SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: monitor-switch-mac-${{ github.sha }}
+          name: deskflip-mac-${{ github.sha }}
           path: |
-            mac/monitor-switch-mac.tar.gz
+            mac/deskflip-mac.tar.gz
             mac/SHA256SUMS.txt
           retention-days: 14
