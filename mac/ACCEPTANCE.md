@@ -119,3 +119,14 @@ Installed Windows helper log for the session (UTC):
 The last Mac run moved the monitor, keyboard and mouse to the PC. Owner: "all worked perfectly!!!" and "The last test I ran switched the mouse, keyboard and the monitor". Afterwards, read-only checks from the PC: monitor input 5, K860 and LIFT both on channel 2, no problems.
 
 Step 7 passes for that run. The 17:51:58 monitor-only press is not yet explained: it implies that before it the monitor showed the Mac while the mouse was on the PC, which an earlier Mac run with an unchanged image would cause. The Mac's own log for these runs has not been read yet. Gate M1 (ten monitor switches from the helper) remains open.
+
+## Gate M3: Options+ for Mac launches the probe — 18 November 2026
+
+Pre-release `mac-helper-test-4ed2491` (0.1.2, archive SHA-256 `5dc82aa6…7e2a78f1`), installed under `~/Applications/MonitorSwitch`. The owner bound the LIFT round button in Options+ for Mac to `MonitorSwitch Probe.app`, which runs only `probe-trigger` and touches no device.
+
+| Check | Result |
+| --- | --- |
+| Launch type | Background-only app bundle (`LSUIElement`), no arguments; the bundle's fixed `MonitorSwitchCommand` selects the probe |
+| Ten separate presses and one ~3 s hold | Probe log grew by exactly the expected eleven lines. Owner: "All worked, the number of lines were exactly what expected" |
+
+M3 passes: one launch per press, none repeated while held. Still to record: the Options+ action type used and the button's previous assignment (for rollback). Next: Input Monitoring for `MonitorSwitch.app`, then bind it and run the first button-launched return.
